@@ -29,28 +29,25 @@ interface FileNode {
 interface FileTreeProps {
   rootPath?: string;
   currentPath?: string;
-  workspace?: string;
   onFileSelect: (path: string) => void;
   onPathChange?: (path: string) => void;
   className?: string;
-}
+  workspace?: string;
 
 export const FileTree: React.FC<FileTreeProps> = ({ 
-  rootPath = 'src', 
+  rootPath = "src", 
   currentPath = '',
-  workspace,
   onFileSelect,
   onPathChange,
   className = '' 
 }) => {
   const [currentRoot, setCurrentRoot] = useState(() => {
     // Use workspace if provided, otherwise fall back to rootPath
-    if (workspace && workspace !== '.') {
+    if (workspace && workspace !== ".") {
       return workspace;
     }
-    return rootPath === 'src' ? '.' : rootPath;
+    return rootPath === "src" ? "." : rootPath;
   });
-  
   const [tree, setTree] = useState<FileNode[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set([]));
   const [loading, setLoading] = useState(true);
@@ -59,25 +56,6 @@ export const FileTree: React.FC<FileTreeProps> = ({
   useEffect(() => {
     loadFileTree(currentRoot);
   }, [currentRoot]);
-
-  // Listen for workspace changes
-  useEffect(() => {
-    const handleWorkspaceChange = (e: CustomEvent) => {
-      const newPath = e.detail?.path;
-      if (newPath) {
-        setCurrentRoot(newPath);
-        loadFileTree(newPath);
-        setExpanded(prev => {
-          const next = new Set(prev);
-          next.add(newPath);
-          return next;
-        });
-      }
-    };
-
-    window.addEventListener('workspace:changed', handleWorkspaceChange as EventListener);
-    return () => window.removeEventListener('workspace:changed', handleWorkspaceChange as EventListener);
-  }, []);
 
   // Auto-expand to current path
   useEffect(() => {
@@ -133,7 +111,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
   };
 
   const navigateUp = () => {
-    if (currentRoot === '.') return;
+    if (currentRoot === ".") return;
     
     const parent = currentRoot.split('/').slice(0, -1).join('/') || '.';
     setCurrentRoot(parent);
@@ -141,8 +119,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
   };
 
   const navigateHome = () => {
-    setCurrentRoot(workspace || '.');
-    onPathChange?.(workspace || '.');
+    setCurrentRoot(".");
+    onPathChange?.(".");
   };
 
   const getFileIcon = (fileName: string) => {
@@ -230,14 +208,14 @@ export const FileTree: React.FC<FileTreeProps> = ({
             onClick={navigateUp}
             className="p-1 hover:bg-purple-500/20 rounded-md transition-colors group"
             title="Go up"
-            disabled={currentRoot === '.'}
+            disabled={currentRoot === '.' || currentRoot === 'src'}
           >
             <ArrowUp className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400" />
           </button>
           <button 
             onClick={navigateHome}
             className="p-1 hover:bg-purple-500/20 rounded-md transition-colors group"
-            title="Go to workspace root"
+            title="Go to src"
           >
             <Home className="w-3.5 h-3.5 text-gray-500 group-hover:text-purple-400" />
           </button>

@@ -320,9 +320,8 @@ export default function RezStackPage() {
           left={
             <div className="h-full overflow-y-auto">
               {/* File Explorer - Takes full height with its own internal padding */}
-                                          <FileTree 
+                            <FileTree 
                 rootPath="src"
-                workspace={workspace}
                 currentPath={currentPath}
                 onFileSelect={handleFileSelect}
                 onPathChange={(path) => {
