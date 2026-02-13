@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SovereignHeader, type CategoryFilter } from '@/components/SovereignHeader';
 import { CommandSidebar } from '@/components/CommandSidebar';
 import { VibeJourneyPanel } from '@/components/VibeJourneyPanel';
@@ -10,6 +10,7 @@ import { ArchitecturalInput } from '@/components/ArchitecturalInput';
 import { CuratedOutput } from '@/components/CuratedOutput';
 import JARVISTerminal from '@/components/JARVISTerminal';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { FileTree } from '@/components/FileTree';
 import ResizableLayout from '@/components/ResizableLayout';
 
 const sampleGeneratedCode = `import { useState, useCallback, useEffect } from 'react';
@@ -185,6 +186,9 @@ export default function RezStackPage() {
   // Model state for Smart Router
   const [currentModel, setCurrentModel] = useState('llama3.2:latest');
   const [mounted, setMounted] = useState(false);
+  const [workspace, setWorkspace] = useState('');
+  const [currentPath, setCurrentPath] = useState('.');
+  const terminalRef = useRef<{ executeCommand: (cmd: string) => void }>(null);
 
   // User progress state
   const [userProgress] = useState({
@@ -209,6 +213,17 @@ export default function RezStackPage() {
       generatedAt: new Date().toLocaleTimeString(),
     }));
   }, []);
+
+  // Handle file selection from FileTree
+  const handleFileSelect = (path: string) => {
+    const cmd = `cat ${path}`;
+    setInputValue(cmd);
+    // Neural link: execute in terminal
+    if (terminalRef.current) {
+      terminalRef.current.executeCommand(cmd);
+    }
+    console.log('🦊 Neural link activated:', cmd);
+  };
 
   // Handle prompt selection
   const handlePromptSelect = (prompt: QuickPrompt) => {
@@ -277,6 +292,19 @@ export default function RezStackPage() {
       model: model,
     }));
   };
+  // Handle workspace change
+  const handleWorkspaceChange = (path: string) => {
+    setWorkspace(path);
+    setCurrentPath('.');
+    console.log('🏠 Workspace switched to:', path);
+    
+    // Refresh file tree
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('workspace:changed', { 
+        detail: { path } 
+      }));
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -285,22 +313,36 @@ export default function RezStackPage() {
         onSearchChange={setSearchQuery}
         categoryFilter={categoryFilter}
         onCategoryChange={setCategoryFilter}
-      />
+       workspace={workspace} onWorkspaceChange={handleWorkspaceChange}  workspace={workspace} onWorkspaceChange={handleWorkspaceChange}  workspace={workspace} onWorkspaceChange={handleWorkspaceChange}  workspace={workspace} onWorkspaceChange={handleWorkspaceChange} />
       
       <div className="flex-1 overflow-hidden">
         <ResizableLayout
           left={
-            <div className="h-full overflow-y-auto p-4 space-y-6">
-              <CommandSidebar
-                selectedCategory={selectedCategory}
-                onCategorySelect={setSelectedCategory}
-                selectedDifficulty={categoryFilter}
+            <div className="h-full overflow-y-auto">
+              {/* File Explorer - Takes full height with its own internal padding */}
+                            <FileTree 
+                rootPath="src"
+                currentPath={currentPath}
+                onFileSelect={handleFileSelect}
+                onPathChange={(path) => {
+                  setCurrentPath(path);
+                  console.log('📁 Navigated to:', path);
+                }}
               />
-              <VibeJourneyPanel
-                level={userProgress.level}
-                xp={userProgress.xp}
-                xpToNextLevel={userProgress.xpToNextLevel}
-              />
+              
+              {/* Your existing components with proper spacing */}
+              <div className="p-4 space-y-6 border-t border-purple-500/20 mt-2">
+                <CommandSidebar
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={setSelectedCategory}
+                  selectedDifficulty={categoryFilter}
+                />
+                <VibeJourneyPanel
+                  level={userProgress.level}
+                  xp={userProgress.xp}
+                  xpToNextLevel={userProgress.xpToNextLevel}
+                />
+              </div>
             </div>
           }
           right={
@@ -328,7 +370,13 @@ export default function RezStackPage() {
                   onRun={handleRun}
                 />
               </div>
-              <JARVISTerminal workspace={process.cwd()} currentPath="." onPathChange={(path) => console.log("Path changed:", path)} />
+              {mounted && (
+                <JARVISTerminal ref={terminalRef} 
+                  workspace={workspace} 
+                  currentPath={currentPath} 
+                  onPathChange={(path) => console.log('Path changed:', path)} 
+                />
+              )}
             </div>
           }
           defaultLeftWidth={25}
@@ -339,5 +387,6 @@ export default function RezStackPage() {
     </div>
   );
 }
+
 
 
