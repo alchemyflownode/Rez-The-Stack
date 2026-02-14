@@ -167,7 +167,7 @@ export function ModelSelector({ currentModel, onModelChange }: ModelSelectorProp
         <SelectTrigger className="w-full bg-black/40 border-purple-500/30 focus:ring-purple-500/50">
           <SelectValue placeholder="Select a model" />
         </SelectTrigger>
-        <SelectContent className="bg-gray-950 border-purple-500/30 max-h-[300px]">
+        <SelectContent className="bg-gray-950 dark:bg-gray-950 border-purple-500/30 max-h-[300px]">
           {/* Sovereign Models */}
           {filteredModels.filter(m => getModelCategory(m.name) === 'sovereign').length > 0 && (
             <>

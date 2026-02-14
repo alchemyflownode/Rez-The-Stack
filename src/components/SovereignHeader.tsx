@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -45,7 +45,7 @@ export function SovereignHeader({
           
           {/* Current Workspace + Button - Just like your sample */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 dark:bg-gray-800/50 
                           border border-purple-500/30 rounded-lg">
               <span className="text-xs font-mono text-purple-400/70 truncate max-w-[200px]">
                 {workspace.split('\\').pop() || 'Select workspace...'}

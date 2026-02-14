@@ -170,3 +170,4 @@ export function CommandSidebar({
     </Card>
   );
 }
+

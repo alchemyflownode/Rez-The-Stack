@@ -125,3 +125,4 @@ export function QuickPrompts({ onPromptSelect }: QuickPromptsProps) {
     </Card>
   );
 }
+

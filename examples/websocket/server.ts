@@ -47,11 +47,11 @@ const createUserMessage = (username: string, content: string): Message => ({
 })
 
 io.on('connection', (socket) => {
-  // // // console.log(`User connected: ${socket.id}`)
+  // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`User connected: ${socket.id}`)
 
   // Add test event handler
   socket.on('test', (data) => {
-    // // // console.log('Received test message:', data)
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('Received test message:', data)
     socket.emit('test-response', { 
       message: 'Server received test message', 
       data: data,
@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
     const usersList = Array.from(users.values())
     socket.emit('users-list', { users: usersList })
     
-    // // // console.log(`${username} joined the chat room, current online users: ${users.size}`)
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`${username} joined the chat room, current online users: ${users.size}`)
   })
 
   socket.on('message', (data: { content: string; username: string }) => {
@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
     if (user && user.username === username) {
       const message = createUserMessage(username, content)
       io.emit('message', message)
-      // // // console.log(`${username}: ${content}`)
+      // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`${username}: ${content}`)
     }
   })
 
@@ -104,9 +104,9 @@ io.on('connection', (socket) => {
       const leaveMessage = createSystemMessage(`${user.username} left the chat room`)
       io.emit('user-left', { user: { id: socket.id, username: user.username }, message: leaveMessage })
       
-      // // // console.log(`${user.username} left the chat room, current online users: ${users.size}`)
+      // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`${user.username} left the chat room, current online users: ${users.size}`)
     } else {
-      // // // console.log(`User disconnected: ${socket.id}`)
+      // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`User disconnected: ${socket.id}`)
     }
   })
 
@@ -117,22 +117,22 @@ io.on('connection', (socket) => {
 
 const PORT = 3003
 httpServer.listen(PORT, () => {
-  // // // console.log(`WebSocket server running on port ${PORT}`)
+  // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`WebSocket server running on port ${PORT}`)
 })
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  // // // console.log('Received SIGTERM signal, shutting down server...')
+  // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('Received SIGTERM signal, shutting down server...')
   httpServer.close(() => {
-    // // // console.log('WebSocket server closed')
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('WebSocket server closed')
     process.exit(0)
   })
 })
 
 process.on('SIGINT', () => {
-  // // // console.log('Received SIGINT signal, shutting down server...')
+  // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('Received SIGINT signal, shutting down server...')
   httpServer.close(() => {
-    // // // console.log('WebSocket server closed')
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('WebSocket server closed')
     process.exit(0)
   })
 })

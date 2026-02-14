@@ -1,15 +1,23 @@
 ﻿'use client';
 
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { SovereignHeader } from '@/components/SovereignHeader';
-import { EnhancedResizableLayout } from '@/components/EnhancedResizableLayout';
+import { EnhancedResizableLayout } from '@/components/EnhancedResizableLayout';  // ✅ named import (with braces)
 import { CommandSidebar } from '@/components/CommandSidebar';
-import JARVISTerminal from '@/components/JARVISTerminal';
+import JARVISTerminal from '@/components/JARVISTerminal';  // ✅ default import (no braces)
 
 export default function ChatPage() {
-  const [workspace, setWorkspace] = useState('/');
-  const [currentPath, setCurrentPath] = useState('.');
-  const terminalRef = useRef<any>(null);
+  const [workspace, setWorkspace] = React.useState('');
+  const [currentPath, setCurrentPath] = React.useState('.');
+  const terminalRef = React.useRef<{ executeCommand: (cmd: string) => void }>(null);
+
+  const handleWorkspaceChange = (path: string) => {
+    setWorkspace(path);
+    setCurrentPath('.');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('workspace:changed', { detail: { path } }));
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -19,7 +27,7 @@ export default function ChatPage() {
         categoryFilter="ALL"
         onCategoryChange={() => {}}
         workspace={workspace}
-        onWorkspaceChange={setWorkspace}
+        onWorkspaceChange={handleWorkspaceChange}
       />
       
       <div className="flex-1 overflow-hidden">
@@ -45,7 +53,6 @@ export default function ChatPage() {
             </div>
           }
           leftConfig={{ id: 'chat-sidebar', defaultSize: 20, minSize: 15, maxSize: 30 }}
-          bottomConfig={{ id: 'chat-terminal', defaultSize: 40, minSize: 20, maxSize: 70 }}
         />
       </div>
     </div>

@@ -97,3 +97,4 @@ export function VibeJourneyPanel({ level, xp, xpToNextLevel }: VibeJourneyPanelP
     </Card>
   );
 }
+

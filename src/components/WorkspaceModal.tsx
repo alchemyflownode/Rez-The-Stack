@@ -46,24 +46,32 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
     { 
       name: 'RezStack-IDE', 
       path: 'G:\\okiru\\app builder\\RezStackFinal2\\RezStack-IDE',
-      icon: '⚡',
+      icon: '?',
       desc: 'Current IDE'
     },
     { 
       name: 'RezStackFinal', 
       path: 'G:\\okiru\\app builder\\RezStackFinal2\\RezStackFinal',
-      icon: '🏛️',
+      icon: '???',
       desc: 'Backend Services'
     },
     { 
       name: 'Desktop', 
       path: 'C:\\Users\\' + (typeof window !== 'undefined' ? window.location.pathname.split('\\')[2] || 'User' : 'User') + '\\Desktop',
-      icon: '🖥️',
+      icon: '???',
       desc: 'Quick Access'
     }
   ];
 
-  if (!isOpen) return null;
+
+  // Listen for open events from dashboard
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-workspace-modal', handleOpen);
+    return () => window.removeEventListener('open-workspace-modal', handleOpen);
+  }, []);
+
+    if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -112,7 +120,7 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 value={inputPath}
                 onChange={(e) => setInputPath(e.target.value)}
                 placeholder="G:\okiru\app builder\RezStackFinal2\RezStack-IDE"
-                className="flex-1 px-4 py-3 bg-gray-800/50 border border-purple-500/30 
+                className="flex-1 px-4 py-3 bg-gray-800 dark:bg-gray-800/50 border border-purple-500/30 
                          rounded-lg text-sm font-mono text-gray-300 placeholder-gray-600
                          focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
               />
@@ -138,7 +146,7 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
                 <button
                   key={ws.path}
                   onClick={() => handleSelect(ws.path)}
-                  className="flex flex-col items-center p-4 bg-gray-800/30 hover:bg-purple-500/10 
+                  className="flex flex-col items-center p-4 bg-gray-800 dark:bg-gray-800/30 hover:bg-purple-500/10 
                            border border-purple-500/20 hover:border-purple-500/50 
                            rounded-xl transition-all duration-200 group"
                 >
@@ -165,7 +173,7 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
                   <button
                     key={path}
                     onClick={() => handleSelect(path)}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-gray-800/30 
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-gray-800 dark:bg-gray-800/30 
                              hover:bg-purple-500/10 rounded-lg border border-purple-500/20
                              hover:border-purple-500/50 transition-all duration-200 group"
                   >
@@ -185,3 +193,6 @@ export const WorkspaceModal: React.FC<WorkspaceModalProps> = ({
     </div>
   );
 };
+
+
+

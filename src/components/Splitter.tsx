@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion, PanInfo } from 'framer-motion';
 
 interface SplitterProps {
@@ -107,3 +107,4 @@ const Splitter: React.FC<SplitterProps> = ({
 };
 
 export default React.memo(Splitter);
+

@@ -423,3 +423,12 @@
 .dark .splitter-handle {
   background: linear-gradient(90deg, rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5));
 }
+
+/* 🔴 FORCE FILE EXPLORER VISIBLE */
+[class*="WorkspaceExplorer"] {
+  display: block !important;
+  width: 350px !important;
+  min-width: 350px !important;
+  border-left: 4px solid #ff4444 !important;
+  background: #1a1a1a !important;
+}
