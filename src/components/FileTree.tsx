@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,7 +56,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
   const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-    console.log('?? FileTree mounted', { workspace, currentPath, rootPath });
+    // // console.log('?? FileTree mounted', { workspace, currentPath, rootPath });
   }, [workspace, currentPath, rootPath]);
 
   // Load file tree when root changes
@@ -317,5 +317,7 @@ function getMockTree(root: string): FileNode[] {
   }
   return [];
 }
+
+
 
 

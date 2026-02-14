@@ -1,4 +1,4 @@
-// src/app/api/generate/route.ts
+﻿// src/app/api/generate/route.ts
 import { ExtractionPipeline } from '@/core/learning/ExtractionPipeline';
 import { SovereignEngine } from '@/services/sovereign-engine';
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // If a specific model is requested, use it directly
     if (requestedModel && REZSTACK_MODEL_ROSTER[requestedModel]) {
-      // // // // // // // // // // // // // // // // // // // // // // // // console.log(`[Generate] Using requested model: ${requestedModel}`);
+      // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`[Generate] Using requested model: ${requestedModel}`);
       
       // Check if model fits in VRAM
       const modelInfo = REZSTACK_MODEL_ROSTER[requestedModel];
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Smart routing based on task analysis
-    // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Analyzing task for smart routing...');
+    // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Analyzing task for smart routing...');
     
     const result = await orchestrator.executeTask(prompt, { 
       tier: 2, 
@@ -78,14 +78,14 @@ export async function POST(request: NextRequest) {
       semanticNaming: true 
     });
     
-    // // // // // // // // // // // // // // // // // // // // // // // // console.log(`[Generate] Routed to: ${result.model} (confidence: ${result.decision.confidence})`);
+    // // // // // // // // // // // // // // // // // // // // // // // // // // console.log(`[Generate] Routed to: ${result.model} (confidence: ${result.decision.confidence})`);
     
     // Verify the output
     const proof = await verifier.verifyTypescript(result.response);
     
     // If verification fails, try with a different model
     if (!proof.isValid && proof.errors.length > 0) {
-      // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Verification failed, retrying with different model...');
+      // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Verification failed, retrying with different model...');
       
       const retryResult = await orchestrator.executeTask(prompt, { 
         tier: 3, // Higher tier for complex fixes
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     
     // Fallback to basic model if orchestrator fails
     try {
-      // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Orchestrator failed, falling back to basic model');
+      // // // // // // // // // // // // // // // // // // // // // // // // // // console.log('[Generate] Orchestrator failed, falling back to basic model');
       const fallbackResult = await orchestrator.executeTask(prompt, { 
         tier: 1, 
         laws: [], 
@@ -282,3 +282,5 @@ export async function GET() {
     });
   }
 }
+
+
