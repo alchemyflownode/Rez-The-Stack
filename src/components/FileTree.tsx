@@ -230,8 +230,8 @@ export const FileTree: React.FC<FileTreeProps> = ({
 
     if (node.type === 'directory') {
       return (
-        <div key={node.path}>
-          <div
+        <div data-testid="filetree-main"  key={node.path}>
+          <div data-testid="filetree-main" 
             className={`flex items-center gap-1 px-2 py-1.5 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group ${isSelected ? 'bg-purple-500/20' : ''}`}
             style={{ paddingLeft: `${paddingLeft}px` }}
             onClick={() => handleFileClick(node.path, 'directory')}
@@ -247,7 +247,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             <span className="text-sm text-gray-300 truncate flex-1">{node.name}</span>
             
             {/* Quick actions on hover */}
-            <div className="hidden group-hover:flex items-center gap-1">
+            <div data-testid="filetree-main"  className="hidden group-hover:flex items-center gap-1">
               <button className="p-1 hover:bg-gray-700 rounded" onClick={(e) => { e.stopPropagation(); handleNewFile(); }}>
                 <FilePlus className="w-3 h-3" />
               </button>
@@ -262,7 +262,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
     }
 
     return (
-      <div
+      <div data-testid="filetree-main" 
         key={node.path}
         className={`flex items-center gap-2 px-2 py-1.5 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group ${isSelected ? 'bg-purple-500/20' : ''}`}
         style={{ paddingLeft: `${paddingLeft + 24}px` }}
@@ -297,11 +297,11 @@ export const FileTree: React.FC<FileTreeProps> = ({
   const filteredTree = searchQuery ? filterTree(tree) : tree;
 
   return (
-    <div className={`h-full flex flex-col ${className}`}>
+    <div data-testid="filetree-main"  className={`h-full flex flex-col ${className}`}>
       {/* Explorer Toolbar */}
-      <div className="p-2 border-b border-gray-800 space-y-2">
+      <div data-testid="filetree-main"  className="p-2 border-b border-gray-800 space-y-2">
         {/* Navigation Bar */}
-        <div className="flex items-center gap-1">
+        <div data-testid="filetree-main"  className="flex items-center gap-1">
           <button
             onClick={navigateHome}
             className="p-1.5 hover:bg-gray-800 rounded transition-colors"
@@ -325,7 +325,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           </button>
           
           {/* Path Bar */}
-          <div className="flex-1 flex items-center gap-1 px-2 py-1 bg-gray-900 rounded text-xs text-gray-400">
+          <div data-testid="filetree-main"  className="flex-1 flex items-center gap-1 px-2 py-1 bg-gray-900 rounded text-xs text-gray-400">
             {currentPath.split('/').map((part, i, arr) => (
               <React.Fragment key={i}>
                 {i > 0 && <ChevronRight className="w-3 h-3 text-gray-600" />}
@@ -340,7 +340,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           </div>
 
           {/* Search */}
-          <div className="relative">
+          <div data-testid="filetree-main"  className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" />
             <input
               type="text"
@@ -360,7 +360,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           </div>
 
           {/* New File/Folder Menu */}
-          <div className="relative">
+          <div data-testid="filetree-main"  className="relative">
             <button
               onClick={() => {}}
               className="p-1.5 hover:bg-gray-800 rounded transition-colors"
@@ -382,13 +382,13 @@ export const FileTree: React.FC<FileTreeProps> = ({
       </div>
 
       {/* File Tree */}
-      <div className="flex-1 overflow-auto p-2">
+      <div data-testid="filetree-main"  className="flex-1 overflow-auto p-2">
         {loading ? (
-          <div className="flex items-center justify-center p-8">
+          <div data-testid="filetree-main"  className="flex items-center justify-center p-8">
             <Loader className="w-5 h-5 text-purple-500 animate-spin" />
           </div>
         ) : error ? (
-          <div className="p-4 text-center">
+          <div data-testid="filetree-main"  className="p-4 text-center">
             <p className="text-sm text-red-400 mb-2">{error}</p>
             <button 
               onClick={() => loadFileTree()}
@@ -398,7 +398,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
             </button>
           </div>
         ) : filteredTree.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-500">
+          <div data-testid="filetree-main"  className="p-4 text-center text-sm text-gray-500">
             {searchQuery ? 'No matches found' : 'Folder is empty'}
           </div>
         ) : (
@@ -408,7 +408,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
 
       {/* Context Menu */}
       {contextMenu && (
-        <div
+        <div data-testid="filetree-main" 
           className="fixed bg-gray-900 border border-gray-800 rounded-lg shadow-xl py-1 z-50 text-sm"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onMouseLeave={() => setContextMenu(null)}
@@ -436,7 +436,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
               <button className="w-full px-4 py-2 text-left hover:bg-gray-800 flex items-center gap-2">
                 <FilePlus className="w-4 h-4" /> New File
               </button>
-              <div className="border-t border-gray-800 my-1" />
+              <div data-testid="filetree-main"  className="border-t border-gray-800 my-1" />
               <button className="w-full px-4 py-2 text-left hover:bg-gray-800 flex items-center gap-2">
                 <Copy className="w-4 h-4" /> Copy Path
               </button>
@@ -450,3 +450,4 @@ export const FileTree: React.FC<FileTreeProps> = ({
     </div>
   );
 };
+
