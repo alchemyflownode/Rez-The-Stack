@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Cpu, Sparkles, Zap, Shield } from 'lucide-react';
+import { ecosystem } from '@/services/EcosystemBridge';
 
 interface Model {
   name: string;
@@ -23,7 +24,21 @@ interface ModelSelectorProps {
   onModelChange: (model: string) => void;
 }
 
-export function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
+export function ModelSelector({ currentModel, onModelChange }: { currentModel: string; onModelChange: (model: string) => void }) {  // JARVIS API Integration
+  useEffect(() => {
+    const fetchJarvisModels = async () => {
+      try {
+        const response = await fetch('http://localhost:8002/issues');
+        const data = await response.json();
+        // Enhance model display with JARVIS data
+        console.log(`🤖 JARVIS API: ${data.total} fixable issues detected`);
+      } catch (error) {
+        console.warn('JARVIS API not available');
+      }
+    };
+    fetchJarvisModels();
+  }, []);
+  // Use props or fallback
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<'all' | 'sovereign' | 'coder' | 'small' | 'vision'>('all');
@@ -328,5 +343,8 @@ export function ModelSelector({ currentModel, onModelChange }: ModelSelectorProp
     </div>
   );
 }
+
+
+
 
 

@@ -5,6 +5,7 @@ import { FileTree } from '@/components/FileTree';
 import { AgentInspector } from '@/components/AgentInspector';
 import JARVISTerminal from '@/components/JARVISTerminal';
 import { ModelSelector } from '@/components/ModelSelector';
+import RezDashboard from '@/app/rez-dashboard/page'; // Import dashboard
 import Link from 'next/link';
 import { 
   LayoutDashboard, 
@@ -13,7 +14,8 @@ import {
   Terminal as TerminalIcon, 
   Activity, 
   Settings2,
-  Search
+  Search,
+  MessageSquare // Add this icon
 } from 'lucide-react';
 
 export default function Home() {
@@ -23,6 +25,7 @@ export default function Home() {
   const [rightWidth, setRightWidth] = useState(32);
   const [isDraggingLeft, setIsDraggingLeft] = useState(false);
   const [isDraggingRight, setIsDraggingRight] = useState(false);
+  const [activeView, setActiveView] = useState<'chat' | 'dashboard'>('chat'); // Add view state
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,6 +79,32 @@ export default function Home() {
             <span className="text-[11px] text-[#cccccc]">{workspace}</span>
             <ChevronDown className="w-3 h-3 text-[#858585]" />
           </button>
+
+          {/* View Toggle - Chat | Dashboard */}
+          <div className="flex items-center gap-1 ml-2 bg-[#0b0b0b] rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveView('chat')}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${
+                activeView === 'chat' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-[#858585] hover:text-white hover:bg-[#2a2d2e]'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveView('dashboard')}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${
+                activeView === 'dashboard' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'text-[#858585] hover:text-white hover:bg-[#2a2d2e]'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 inline mr-1" />
+              Dashboard
+            </button>
+          </div>
         </div>
 
         {/* Command Palette */}
@@ -88,9 +117,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/rez-dashboard" className="p-1.5 hover:bg-[#2a2d2e] rounded transition-colors text-[#858585] hover:text-white">
-            <LayoutDashboard className="w-4 h-4" />
-          </Link>
+          {/* Remove the old dashboard link since we have tabs now */}
           <div className="w-px h-4 bg-[#333333]" />
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
@@ -117,16 +144,29 @@ export default function Home() {
           className="w-[2px] hover:w-[4px] bg-transparent hover:bg-purple-500/30 active:bg-purple-500/50 cursor-col-resize transition-all z-10 flex-shrink-0"
         />
 
-        {/* Main Terminal */}
+        {/* Main Content - Switches between Chat and Dashboard */}
         <section style={{ width: `${middleWidth}%` }} className="flex flex-col bg-[#1e1e1e] flex-shrink-0">
           <div className="h-9 flex items-center px-4 border-b border-[#252525] bg-[#181818] gap-4 flex-shrink-0">
             <div className="flex items-center gap-2 border-b border-purple-500 h-full px-2">
-              <TerminalIcon className="w-3.5 h-3.5 text-purple-400" />
-              <span className="text-[11px] font-medium text-[#e1e1e1]">JARVIS</span>
+              {activeView === 'chat' ? (
+                <>
+                  <TerminalIcon className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-[11px] font-medium text-[#e1e1e1]">JARVIS</span>
+                </>
+              ) : (
+                <>
+                  <LayoutDashboard className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-[11px] font-medium text-[#e1e1e1]">Sovereign Dashboard</span>
+                </>
+              )}
             </div>
           </div>
           <div className="flex-1 relative overflow-hidden">
-            <JARVISTerminal />
+            {activeView === 'chat' ? (
+              <JARVISTerminal />
+            ) : (
+              <RezDashboard />
+            )}
           </div>
         </section>
 
