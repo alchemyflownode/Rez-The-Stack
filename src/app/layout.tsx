@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,27 +14,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "RezStack Sovereign IDE - Your Code. Your Models. Your Sovereignty.",
+  description: "A local-first, constitutional AI development environment with 25+ local models, GPU acceleration, zero telemetry, and self-learning memory crystals.",
+  keywords: [
+    "RezStack",
+    "Sovereign IDE",
+    "Local AI",
+    "Constitutional AI",
+    "GPU Development",
+    "Ollama",
+    "Next.js",
+    "TypeScript",
+    "Self-hosted AI",
+    "Code Sovereignty"
+  ],
+  authors: [{ name: "RezStack Contributors" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "RezStack Sovereign IDE",
+    description: "Your code. Your models. Your sovereignty.",
+    url: "https://github.com/alchemyflownode/Rez-The-Stack",
+    siteName: "RezStack",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "RezStack Sovereign IDE",
+    description: "Your code. Your models. Your sovereignty.",
   },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
