@@ -1,0 +1,104 @@
+// Root-Seeker App Factory - Prisma Schema
+// Sovereign, Self-Healing, Ever-Deductive
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Domains explored through root-seeking
+model Domain {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  rootAnswer  String?     // The discovered root truth
+  status      String      @default("exploring") // exploring, rooted, building, complete
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  frameworks  Framework[]
+  questions   Question[]
+  patterns    Pattern[]
+  healings    HealingLog[]
+}
+
+// Frameworks distilled from roots
+model Framework {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  structure   String      // JSON structure of the framework
+  domainId    String
+  domain      Domain      @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  version     Int         @default(1)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  generations Generation[]
+}
+
+// Questions asked during root descent
+model Question {
+  id          String   @id @default(cuid())
+  domainId    String
+  domain      Domain   @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  question    String
+  answer      String?
+  depth       Int      @default(1) // How deep in the descent
+  isRoot      Boolean  @default(false) // Is this a root question?
+  createdAt   DateTime @default(now())
+}
+
+// Patterns learned (cross-domain)
+model Pattern {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  structure   String   // JSON - the reusable pattern structure
+  domainId    String?
+  domain      Domain?  @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  applications Int    @default(0) // Times applied to new domains
+  confidence  Float    @default(0.5) // 0-1 confidence score
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Self-healing logs
+model HealingLog {
+  id            String   @id @default(cuid())
+  domainId      String?
+  domain        Domain?  @relation(fields: [domainId], references: [id], onDelete: SetNull)
+  issue         String   // What was detected
+  diagnosis     String   // Root cause analysis
+  intervention  String   // What was done to heal
+  success       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+// Generated apps/code from frameworks
+model Generation {
+  id           String    @id @default(cuid())
+  frameworkId  String
+  framework    Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  type         String    // app, api, component, system
+  name         String
+  code         String    // Generated code
+  description  String?
+  status       String    @default("generated") // generated, deployed, archived
+  createdAt    DateTime  @default(now())
+}
+
+// System memory for deductive learning
+model SystemMemory {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   // JSON
+  category    String   // insight, principle, heuristic, meta
+  source      String?  // Where this came from
+  confidence  Float    @default(0.5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

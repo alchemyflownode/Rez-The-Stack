@@ -1,0 +1,10 @@
+﻿{/* Swarm Status - Add near the Ollama badge */}
+<Badge variant="outline" className="border-0 text-purple-400">
+  <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+    <circle cx="8" cy="8" r="2" fill="currentColor"/>
+    <circle cx="16" cy="8" r="2" fill="currentColor"/>
+    <circle cx="12" cy="14" r="2" fill="currentColor"/>
+  </svg>
+  SWARM
+</Badge>
