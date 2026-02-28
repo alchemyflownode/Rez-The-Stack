@@ -1,0 +1,53 @@
+﻿import os
+import psutil
+import subprocess
+import sys
+import json
+
+PROTECTED = ["explorer.exe", "dwm.exe", "lsass.exe", "svchost.exe", "system", "python.exe", "ollama.exe"]
+
+def handle(req):
+    method = req.get('method')
+    params = req.get('params', {})
+    if method == 'launch_app':
+        path = params.get('path')
+        if not os.path.exists(path):
+            return {'error': 'not found'}
+        os.startfile(path)
+        return {'success': True, 'message': f'Launched {path}'}
+    elif method == 'terminate_process':
+        name = params.get('name')
+        if name.lower() in [p.lower() for p in PROTECTED]:
+            return {'error': 'protected process'}
+        killed = []
+        for proc in psutil.process_iter(['name']):
+            if proc.info['name'] and proc.info['name'].lower() == name.lower():
+                try:
+                    proc.kill()
+                    killed.append(name)
+                except Exception as e:
+                    pass
+        return {'success': True, 'message': f'Terminated {len(killed)} instance(s)'}
+    elif method == 'list_processes':
+        procs = []
+        for p in psutil.process_iter(['name', 'memory_info']):
+            try:
+                procs.append({'name': p.info['name'], 'memory_mb': round(p.info['memory_info'].rss/(1024*1024),1)})
+            except Exception as e:
+                pass
+        procs.sort(key=lambda x: x['memory_mb'], reverse=True)
+        return {'success': True, 'processes': procs[:20]}
+    return {'error': 'unknown method'}
+
+if __name__ == '__main__':
+    while True:
+        try:
+            line = sys.stdin.readline()
+            if not line: break
+            resp = handle(json.loads(line))
+            sys.stdout.write(json.dumps(resp) + '\n')
+            sys.stdout.flush()
+        except Exception as e:
+            sys.stdout.write(json.dumps({'error': str(e)}) + '\n')
+            sys.stdout.flush()
+

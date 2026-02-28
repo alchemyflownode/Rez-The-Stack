@@ -1,0 +1,34 @@
+﻿:root {
+  /* ===== THE OBSIDIAN CORE ===== */
+  --bg-root: #030405;           /* Pure Obsidian */
+  --bg-panel: #0B0C0E;          /* Glass surface */
+  --bg-elevated: #121417;       /* Active cards */
+  
+  /* ===== THE NEURAL ACCENT ===== */
+  --accent-cyan: #2DD4BF;       /* Sovereign Teal */
+  --accent-glow: rgba(45, 212, 191, 0.15);
+  --accent-border: #1E293B;     /* Slate 800 */
+  
+  /* ===== TEXT HIERARCHY ===== */
+  --text-bright: #F8FAFC;
+  --text-dim: #94A3B8;
+  --text-ghost: #475569;
+  
+  /* ===== GEOMETRY ===== */
+  --radius-squircle: 12px;
+}
+
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--accent-border);
+}
+
+.neural-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}

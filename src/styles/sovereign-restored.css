@@ -1,0 +1,213 @@
+﻿/* ================================================================
+   SOVEREIGN OS - RESTORED SPLITTERS + 3D PANELS + DARK SCHEME
+   ================================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ===== DARK SCHEME - Deep professional ===== */
+  --bg-root: #030405;
+  --bg-surface: #080A0C;
+  --bg-elevated: #0F1113;
+  --bg-panel: #0A0C0E;
+  
+  /* ===== BORDERS - Subtle but visible ===== */
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.1);
+  
+  /* ===== 3D SHADOWS - Multi-layered depth ===== */
+  --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.7);
+  --shadow-3d: 0 20px 40px rgba(0, 0, 0, 0.8), 
+               0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+               0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  
+  /* ===== SUBTLE CURVES ===== */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-full: 9999px;
+  
+  /* Application radii */
+  --radius-panel: 6px;
+  --radius-card: 4px;
+  --radius-button: 3px;
+  --radius-input: 4px;
+  
+  /* ===== TYPOGRAPHY HIERARCHY ===== */
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  
+  /* ===== ACCENT - Sovereign ===== */
+  --accent-primary: #2D9CDB;
+  --accent-hover: #3DA9E5;
+  --accent-soft: rgba(45, 156, 219, 0.1);
+  --accent-glow: 0 0 15px rgba(45, 156, 219, 0.2);
+}
+
+/* ===== PREMIUM SPLITTERS ===== */
+[data-panel-resize-handle] {
+  background: transparent !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Horizontal splitters */
+[data-panel-group-direction="horizontal"] > [data-panel-resize-handle] {
+  width: 2px !important;
+  margin: 0;
+}
+
+[data-panel-group-direction="horizontal"] > [data-panel-resize-handle]:hover {
+  background: var(--accent-primary) !important;
+  box-shadow: 0 0 12px var(--accent-primary);
+}
+
+/* Vertical splitters */
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle] {
+  height: 2px !important;
+  width: 100% !important;
+  margin: 0;
+}
+
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle]:hover {
+  background: var(--accent-primary) !important;
+  box-shadow: 0 0 12px var(--accent-primary);
+}
+
+/* ===== 3D PANELS ===== */
+.panel-3d {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-3d);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), 0 0 0 1px var(--accent-soft) inset;
+}
+
+.panel-elevated-3d {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.panel-surface-3d {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* ===== TYPOGRAPHY HIERARCHY ===== */
+h1 { font-size: var(--text-3xl); font-weight: var(--weight-semibold); letter-spacing: -0.02em; }
+h2 { font-size: var(--text-2xl); font-weight: var(--weight-medium); }
+h3 { font-size: var(--text-xl); font-weight: var(--weight-medium); color: var(--text-secondary); }
+h4, .section-title { 
+  font-size: var(--text-lg); 
+  font-weight: var(--weight-medium); 
+  text-transform: uppercase; 
+  letter-spacing: 0.05em; 
+  color: var(--text-tertiary);
+  margin-bottom: 1em;
+}
+
+.meta-text { font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; }
+.label-text { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-secondary); }
+
+/* ===== WORKER GRID ===== */
+.worker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 4px;
+}
+
+.worker-item {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.worker-item:hover {
+  border-color: var(--accent-soft);
+  background: var(--bg-surface);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.worker-item.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-soft);
+  box-shadow: 0 0 15px var(--accent-primary);
+}
+
+.worker-icon {
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 4px;
+  color: var(--text-tertiary);
+}
+
+.worker-item.active .worker-icon {
+  color: var(--accent-primary);
+}
+
+.worker-name {
+  font-size: 9px;
+  font-weight: var(--weight-medium);
+  color: var(--text-tertiary);
+  line-height: 1.2;
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.active {
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}

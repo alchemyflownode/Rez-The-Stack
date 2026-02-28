@@ -1,0 +1,232 @@
+﻿/* ================================================================
+   SOVEREIGN OS - OBSIDIAN PALETTE
+   Deep blacks • Vibrant cyan • Pulse indicators
+   ================================================================ */
+
+:root {
+  /* ===== OBSIDIAN DEEP - True dark mode ===== */
+  --obsidian-root: #030405;
+  --obsidian-surface: #0B0C0E;
+  --obsidian-panel: #0F1113;
+  --obsidian-elevated: #151719;
+  
+  /* ===== SOVEREIGN CYAN - Primary action ===== */
+  --cyan-primary: #2DD4BF;
+  --cyan-hover: #5EEAD4;
+  --cyan-soft: rgba(45, 212, 191, 0.15);
+  --cyan-glow: 0 0 20px rgba(45, 212, 191, 0.3);
+  
+  /* ===== CYBER GREEN - Success states ===== */
+  --green-success: #22C55E;
+  --green-soft: rgba(34, 197, 94, 0.1);
+  --green-glow: 0 0 15px rgba(34, 197, 94, 0.3);
+  
+  /* ===== BORDERS & TEXT ===== */
+  --border-subtle: #1E293B;
+  --border-soft: #334155;
+  --border-medium: #475569;
+  
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-tertiary: #64748B;
+  
+  /* ===== PANEL SIZES ===== */
+  --sidebar-width: 72px;
+  --panel-radius: 8px;
+  --card-radius: 6px;
+}
+
+/* ===== BASE STYLES ===== */
+body {
+  background-color: var(--obsidian-root);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ===== PANELS & SURFACES ===== */
+.panel-obsidian {
+  background: var(--obsidian-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--panel-radius);
+}
+
+.panel-surface {
+  background: var(--obsidian-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--panel-radius);
+}
+
+.panel-elevated {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--panel-radius);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== CYAN ACCENTS ===== */
+.cyan-text { color: var(--cyan-primary); }
+.cyan-border { border-color: var(--cyan-primary); }
+.cyan-bg { background: var(--cyan-primary); }
+.cyan-glow { box-shadow: var(--cyan-glow); }
+
+/* ===== PULSE INDICATOR ===== */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan-primary);
+  box-shadow: var(--cyan-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-online {
+  color: var(--green-success);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-online::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-success);
+  box-shadow: var(--green-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ===== WORKER GRID ===== */
+.worker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 4px;
+}
+
+.worker-item {
+  background: var(--obsidian-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--card-radius);
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.worker-item:hover {
+  border-color: var(--cyan-primary);
+  background: var(--cyan-soft);
+}
+
+.worker-item.active {
+  border-color: var(--cyan-primary);
+  background: var(--cyan-soft);
+  box-shadow: var(--cyan-glow);
+}
+
+.worker-icon {
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 4px;
+  color: var(--text-muted);
+}
+
+.worker-item.active .worker-icon {
+  color: var(--cyan-primary);
+}
+
+.worker-name {
+  font-size: 9px;
+  color: var(--text-tertiary);
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar-obsidian {
+  width: var(--sidebar-width);
+  background: var(--obsidian-panel);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.sidebar-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-muted);
+  margin: 4px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-icon:hover {
+  background: var(--cyan-soft);
+  color: var(--cyan-primary);
+}
+
+.sidebar-icon.active {
+  background: var(--cyan-soft);
+  color: var(--cyan-primary);
+}
+
+.sidebar-icon.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%;
+  height: 50%;
+  width: 2px;
+  background: var(--cyan-primary);
+  box-shadow: var(--cyan-glow);
+}
+
+/* ===== SPLITTERS ===== */
+[data-panel-resize-handle] {
+  background: transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-panel-resize-handle]:hover {
+  background: var(--cyan-primary);
+  box-shadow: var(--cyan-glow);
+}
+
+[data-panel-group-direction="horizontal"] > [data-panel-resize-handle] {
+  width: 2px;
+}
+
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle] {
+  height: 2px;
+}
+
+/* ===== SCROLLBARS ===== */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan-primary);
+}

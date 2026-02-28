@@ -1,0 +1,44 @@
+﻿'use client';
+
+import { PremiumHeader } from '@/components/PremiumHeader';
+import { useSessionMemory } from '@/hooks/useSessionMemory';
+import { useKernel } from '@/hooks/useKernel';
+import { LeftSidebar } from '@/components/LeftSidebar';
+import { useSessionMemory } from '@/hooks/useSessionMemory';
+import { useKernel } from '@/hooks/useKernel';
+import { RightSidebar } from '@/components/RightSidebar';
+import { useSessionMemory } from '@/hooks/useSessionMemory';
+import { useKernel } from '@/hooks/useKernel';
+import { MainContent } from '@/components/MainContent';
+import { useSessionMemory } from '@/hooks/useSessionMemory';
+import { useKernel } from '@/hooks/useKernel';
+
+export default function Home() {
+  useSessionMemory();
+  const { execute } = useKernel();
+  return (
+    <div className="h-screen flex flex-col bg-[#0F172A]">
+      {/* Fixed Header */}
+      <PremiumHeader />
+      
+      {/* Main 3-Column Layout */}
+      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+        {/* Left Sidebar - Fixed width */}
+        <div className="w-64 flex-shrink-0 overflow-y-auto">
+          <LeftSidebar />
+        </div>
+        
+        {/* Main Content - Flexible */}
+        <div className="flex-1 overflow-y-auto">
+          <MainContent />
+        </div>
+        
+        {/* Right Sidebar - Fixed width */}
+        <div className="w-80 flex-shrink-0 overflow-y-auto">
+          <RightSidebar />
+        </div>
+      </div>
+    </div>
+  );
+}
+

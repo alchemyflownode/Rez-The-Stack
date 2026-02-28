@@ -1,0 +1,459 @@
+﻿{
+    "configs":  [
+                    {
+                        "name":  "package.json",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\package.json"
+                    },
+                    {
+                        "name":  "next.config.ts",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\next.config.ts"
+                    },
+                    {
+                        "name":  "tailwind.config.ts",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\tailwind.config.ts"
+                    },
+                    {
+                        "name":  "tsconfig.json",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\tsconfig.json"
+                    },
+                    {
+                        "name":  ".env",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\.env"
+                    },
+                    {
+                        "name":  "rez.config.json",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\rez.config.json"
+                    },
+                    {
+                        "name":  "REZ_PHASE.md",
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\REZ_PHASE.md"
+                    }
+                ],
+    "components":  [
+                       {
+                           "name":  "accordion.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\accordion.tsx"
+                       },
+                       {
+                           "name":  "alert-dialog.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\alert-dialog.tsx"
+                       },
+                       {
+                           "name":  "alert.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\alert.tsx"
+                       },
+                       {
+                           "name":  "aspect-ratio.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\aspect-ratio.tsx"
+                       },
+                       {
+                           "name":  "avatar.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\avatar.tsx"
+                       },
+                       {
+                           "name":  "badge.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\badge.tsx"
+                       },
+                       {
+                           "name":  "breadcrumb.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\breadcrumb.tsx"
+                       },
+                       {
+                           "name":  "button.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\button.tsx"
+                       },
+                       {
+                           "name":  "calendar.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\calendar.tsx"
+                       },
+                       {
+                           "name":  "card.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\card.tsx"
+                       },
+                       {
+                           "name":  "carousel.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\carousel.tsx"
+                       },
+                       {
+                           "name":  "chart.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\chart.tsx"
+                       },
+                       {
+                           "name":  "checkbox.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\checkbox.tsx"
+                       },
+                       {
+                           "name":  "collapsible.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\collapsible.tsx"
+                       },
+                       {
+                           "name":  "command.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\command.tsx"
+                       },
+                       {
+                           "name":  "context-menu.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\context-menu.tsx"
+                       },
+                       {
+                           "name":  "dialog.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\dialog.tsx"
+                       },
+                       {
+                           "name":  "drawer.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\drawer.tsx"
+                       },
+                       {
+                           "name":  "dropdown-menu.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\dropdown-menu.tsx"
+                       },
+                       {
+                           "name":  "form.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\form.tsx"
+                       },
+                       {
+                           "name":  "hover-card.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\hover-card.tsx"
+                       },
+                       {
+                           "name":  "input-otp.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\input-otp.tsx"
+                       },
+                       {
+                           "name":  "input.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\input.tsx"
+                       },
+                       {
+                           "name":  "label.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\label.tsx"
+                       },
+                       {
+                           "name":  "menubar.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\menubar.tsx"
+                       },
+                       {
+                           "name":  "navigation-menu.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\navigation-menu.tsx"
+                       },
+                       {
+                           "name":  "pagination.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\pagination.tsx"
+                       },
+                       {
+                           "name":  "popover.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\popover.tsx"
+                       },
+                       {
+                           "name":  "progress.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\progress.tsx"
+                       },
+                       {
+                           "name":  "radio-group.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\radio-group.tsx"
+                       },
+                       {
+                           "name":  "resizable.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\resizable.tsx"
+                       },
+                       {
+                           "name":  "scroll-area.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\scroll-area.tsx"
+                       },
+                       {
+                           "name":  "select.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\select.tsx"
+                       },
+                       {
+                           "name":  "separator.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\separator.tsx"
+                       },
+                       {
+                           "name":  "sheet.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\sheet.tsx"
+                       },
+                       {
+                           "name":  "sidebar.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\sidebar.tsx"
+                       },
+                       {
+                           "name":  "skeleton.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\skeleton.tsx"
+                       },
+                       {
+                           "name":  "slider.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\slider.tsx"
+                       },
+                       {
+                           "name":  "sonner.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\sonner.tsx"
+                       },
+                       {
+                           "name":  "switch.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\switch.tsx"
+                       },
+                       {
+                           "name":  "table.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\table.tsx"
+                       },
+                       {
+                           "name":  "tabs.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\tabs.tsx"
+                       },
+                       {
+                           "name":  "textarea.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\textarea.tsx"
+                       },
+                       {
+                           "name":  "toast.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\toast.tsx"
+                       },
+                       {
+                           "name":  "toaster.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\toaster.tsx"
+                       },
+                       {
+                           "name":  "toggle-group.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\toggle-group.tsx"
+                       },
+                       {
+                           "name":  "toggle.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\toggle.tsx"
+                       },
+                       {
+                           "name":  "tooltip.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\ui\\tooltip.tsx"
+                       },
+                       {
+                           "name":  "SovereignAbend.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\SovereignAbend.tsx"
+                       },
+                       {
+                           "name":  "PCDashboard.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\PCDashboard.tsx"
+                       },
+                       {
+                           "name":  "DeepSearchResults.tsx",
+                           "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\components\\DeepSearchResults.tsx"
+                       }
+                   ],
+    "workers":  [
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\code\\route.ts",
+                        "name":  "code",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\app\\route.ts",
+                        "name":  "app",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\file\\route.ts",
+                        "name":  "file",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\rezstack\\route.ts",
+                        "name":  "rezstack",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\mcp\\route.ts",
+                        "name":  "mcp",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\vision\\route.ts",
+                        "name":  "vision",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\mutation\\route.ts",
+                        "name":  "mutation",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\director\\route.ts",
+                        "name":  "director",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\sce\\route.ts",
+                        "name":  "sce",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\voice\\route.ts",
+                        "name":  "voice",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\canvas\\route.ts",
+                        "name":  "canvas",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\deepsearch\\route.ts",
+                        "name":  "deepsearch",
+                        "methods":  "active"
+                    },
+                    {
+                        "path":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\system_monitor\\route.ts",
+                        "name":  "system_monitor",
+                        "methods":  "active"
+                    }
+                ],
+    "timestamp":  {
+                      "value":  "\/Date(1771945154374)\/",
+                      "DisplayHint":  2,
+                      "DateTime":  "Tuesday, February 24, 2026 10:59:14 PM"
+                  },
+    "endpoints":  [
+                      {
+                          "endpoint":  "/api/route.ts",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\route.ts",
+                          "methods":  "GET",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/architect",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\architect\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/discover",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\discover\\route.ts",
+                          "methods":  "POST, PUT",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/domains",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\domains\\route.ts",
+                          "methods":  "GET, POST, PUT, DELETE",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/generate",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\generate\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/heal",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\heal\\route.ts",
+                          "methods":  "GET, POST, PUT",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/kernel",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\kernel\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/learn",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\learn\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/code",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\code\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/app",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\app\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/file",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\file\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/rezstack",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\rezstack\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/mcp",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\mcp\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/vision",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\vision\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/mutation",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\mutation\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/director",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\director\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/sce",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\sce\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/voice",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\voice\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/canvas",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\canvas\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/deepsearch",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\deepsearch\\route.ts",
+                          "methods":  "POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/workers/system_monitor",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\workers\\system_monitor\\route.ts",
+                          "methods":  "GET, POST",
+                          "exists":  true
+                      },
+                      {
+                          "endpoint":  "/api/system/snapshot",
+                          "file":  "G:\\okiru\\app builder\\Cognitive Kernel\\src\\app\\api\\system\\snapshot\\route.ts",
+                          "methods":  "GET",
+                          "exists":  true
+                      }
+                  ],
+    "issues":  [
+                   "Worker \u0027code\u0027 not in kernel registry",
+                   "Worker \u0027app\u0027 not in kernel registry",
+                   "Worker \u0027file\u0027 not in kernel registry",
+                   "Worker \u0027rezstack\u0027 not in kernel registry",
+                   "Worker \u0027mcp\u0027 not in kernel registry",
+                   "Worker \u0027vision\u0027 not in kernel registry",
+                   "Worker \u0027mutation\u0027 not in kernel registry",
+                   "Worker \u0027director\u0027 not in kernel registry",
+                   "Worker \u0027sce\u0027 not in kernel registry",
+                   "Worker \u0027voice\u0027 not in kernel registry",
+                   "Worker \u0027canvas\u0027 not in kernel registry",
+                   "Worker \u0027deepsearch\u0027 not in kernel registry",
+                   "Worker \u0027system_monitor\u0027 not in kernel registry"
+               ]
+}

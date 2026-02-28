@@ -1,0 +1,13 @@
+﻿import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+export async function GET() {
+  try {
+    const filePath = path.join(process.cwd(), 'constitution.json');
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    return NextResponse.json({ status: 'success', ...data });
+  } catch {
+    return NextResponse.json({ status: 'success', rules: ["Default Rule"] });
+  }
+}

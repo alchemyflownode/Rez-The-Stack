@@ -1,0 +1,37 @@
+﻿@import './styles/future-palette.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Smooth scrolling */
+.scrollable {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2d2e3a transparent;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background: #2d2e3a;
+  border-radius: 2px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}

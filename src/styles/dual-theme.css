@@ -1,0 +1,206 @@
+﻿/* ================================================================
+   SOVEREIGN DUAL PERSONALITY DESIGN SYSTEM
+   Dark: Builder Mode • Light: Flow Mode • Smooth transitions
+   ================================================================ */
+
+:root {
+  /* ===== SHARED CONSTANTS ===== */
+  --radius-xl: 24px;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --transition: 300ms ease-in-out;
+  
+  /* ===== DARK MODE (Builder) - Default ===== */
+  --dark-bg: #0B0F14;
+  --dark-surface: #151A21;
+  --dark-surface-soft: rgba(21, 26, 33, 0.7);
+  --dark-text-primary: #FFFFFF;
+  --dark-text-secondary: #AAB2C0;
+  --dark-text-tertiary: #6B7A8F;
+  --dark-accent: #8b5cf6;
+  --dark-accent-soft: rgba(139, 92, 246, 0.15);
+  --dark-border: rgba(255, 255, 255, 0.08);
+  
+  /* ===== LIGHT MODE (Flow) ===== */
+  --light-bg: linear-gradient(135deg, #EAF2F8, #D6E4F0);
+  --light-surface: rgba(255, 255, 255, 0.65);
+  --light-surface-solid: #F0F4F8;
+  --light-text-primary: #1C2A39;
+  --light-text-secondary: #4F6478;
+  --light-text-tertiary: #7A8B9F;
+  --light-accent: #8b5cf6;
+  --light-accent-soft: rgba(139, 92, 246, 0.1);
+  --light-border: rgba(0, 0, 0, 0.06);
+  
+  /* ===== DARK MODE DEFAULTS ===== */
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --surface-soft: var(--dark-surface-soft);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --text-tertiary: var(--dark-text-tertiary);
+  --accent: var(--dark-accent);
+  --accent-soft: var(--dark-accent-soft);
+  --border: var(--dark-border);
+}
+
+[data-theme="light"] {
+  --bg: var(--light-bg);
+  --surface: var(--light-surface);
+  --surface-soft: var(--light-surface-solid);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --text-tertiary: var(--light-text-tertiary);
+  --accent: var(--light-accent);
+  --accent-soft: var(--light-accent-soft);
+  --border: var(--light-border);
+}
+
+/* ===== BASE STYLES ===== */
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background var(--transition), color var(--transition);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ===== SOVEREIGN CONTAINER ===== */
+.sovereign-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* ===== MODE TOGGLE ===== */
+.mode-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--surface-soft);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 4px;
+  display: flex;
+  gap: 4px;
+  z-index: 100;
+  transition: all var(--transition);
+}
+
+.toggle-option {
+  padding: 8px 16px;
+  border-radius: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.toggle-option.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px var(--accent-soft);
+}
+
+/* ===== HERO HEADLINE ===== */
+.hero-headline {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all var(--transition);
+}
+
+/* ===== INPUT CONTAINER ===== */
+.input-container {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transition: all var(--transition);
+  margin-bottom: 24px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  outline: none;
+}
+
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ===== SUGGESTION CHIPS ===== */
+.suggestion-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.suggestion-chip {
+  padding: 8px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.suggestion-chip:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+/* ===== RESPONSE CARD ===== */
+.response-card {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-top: 24px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition);
+}
+
+/* ===== MODE BADGE ===== */
+.mode-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 40px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ===== SIMPLE LAYOUT ===== */
+.simple-layout {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}

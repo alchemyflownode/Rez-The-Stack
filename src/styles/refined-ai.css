@@ -1,0 +1,82 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ===== THE INK PALETTE (Anti-MS Paint) ===== */
+  --bg-deep: #030405;           /* The Void */
+  --bg-root: #050607;           /* Main Foundation */
+  --bg-surface: #0A0C0E;        /* Standard Panels */
+  --bg-elevated: #111315;       /* Tooltips / Active States */
+  
+  /* ===== THE LIGHT-CATCHERS (1px Precision) ===== */
+  --border-glass: rgba(255, 255, 255, 0.04);
+  --border-bright: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(45, 156, 219, 0.4);
+
+  /* ===== NESTED RADII (The Professional Curve) ===== */
+  --radius-outer: 10px;         /* Main Window/Panels */
+  --radius-inner: 6px;          /* Cards/Chat Bubbles */
+  --radius-item: 3px;           /* Buttons/Icons/Tags */
+
+  /* ===== TYPE HIERARCHY (Optical Sizes) ===== */
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+
+  --text-titan: 24px;           /* Large Titles */
+  --text-lead: 14px;            /* Sub-headers */
+  --text-body: 13px;            /* Standard content */
+  --text-data: 11px;            /* Technical Info/Terminal */
+  --text-micro: 9px;            /* Overlines/Labels */
+
+  /* ===== ACCENTS (Muted Sovereign) ===== */
+  --accent-cyan: #2D9CDB;
+  --accent-glow: 0 0 20px rgba(45, 156, 219, 0.1);
+}
+
+/* ===== HIGH-END PANEL RENDERING ===== */
+.sovereign-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-outer);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sovereign-panel:hover {
+  border-color: var(--border-bright);
+}
+
+/* ===== CHAT BUBBLE REFINEMENT ===== */
+.bubble-assistant {
+  background: linear-gradient(145deg, var(--bg-elevated), var(--bg-surface));
+  border: 1px solid var(--border-glass);
+  border-radius: 0 var(--radius-inner) var(--radius-inner) var(--radius-inner);
+  padding: 10px 14px;
+  font-size: var(--text-body);
+  color: #D1D5DB;
+}
+
+.bubble-user {
+  background: var(--accent-cyan);
+  color: #050607;
+  font-weight: 500;
+  border-radius: var(--radius-inner) 0 var(--radius-inner) var(--radius-inner);
+  padding: 8px 14px;
+  box-shadow: 0 4px 15px rgba(45, 156, 219, 0.2);
+}
+
+/* ===== TECHNICAL DATA TEXT ===== */
+.data-label {
+  font-family: var(--font-data);
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #4B5563; /* Muted Slate */
+}
+
+.data-value {
+  font-family: var(--font-data);
+  font-size: var(--text-data);
+  color: var(--accent-cyan);
+}

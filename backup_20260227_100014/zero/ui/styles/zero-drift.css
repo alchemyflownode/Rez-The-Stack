@@ -1,0 +1,102 @@
+﻿/* ================================================================
+   ZERO DRIFT v2026 - SOVEREIGN THEME
+   ================================================================ */
+
+:root {
+  /* ===== ZERO DRIFT COLOR PALETTE ===== */
+  --zd-bg-deep: #0A0A0C;
+  --zd-bg-surface: #121214;
+  --zd-bg-elevated: #1A1A1E;
+  
+  /* Glass variants */
+  --zd-glass-ultra-thin: rgba(18, 18, 20, 0.3);
+  --zd-glass-thin: rgba(18, 18, 20, 0.5);
+  --zd-glass-medium: rgba(18, 18, 20, 0.7);
+  --zd-glass-heavy: rgba(18, 18, 20, 0.9);
+  
+  /* Sovereign Cyan */
+  --zd-cyan: #00FFC2;
+  --zd-cyan-dim: #00CC9C;
+  --zd-cyan-soft: rgba(0, 255, 194, 0.1);
+  --zd-cyan-glow: 0 0 30px rgba(0, 255, 194, 0.2);
+  
+  /* Verification Amber */
+  --zd-amber: #FFB800;
+  --zd-amber-soft: rgba(255, 184, 0, 0.1);
+  --zd-amber-glow: 0 0 30px rgba(255, 184, 0, 0.15);
+  
+  /* Typography */
+  --zd-font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  --zd-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Text hierarchy */
+  --zd-text-primary: rgba(255, 255, 255, 0.95);
+  --zd-text-secondary: rgba(255, 255, 255, 0.7);
+  --zd-text-tertiary: rgba(255, 255, 255, 0.5);
+  --zd-text-muted: rgba(255, 255, 255, 0.3);
+  --zd-text-dim: rgba(255, 255, 255, 0.1);
+  
+  /* Radii */
+  --zd-radius-none: 0;
+  --zd-radius-sm: 2px;
+  --zd-radius-md: 4px;
+  --zd-radius-lg: 8px;
+  --zd-radius-xl: 12px;
+  --zd-radius-full: 9999px;
+  
+  /* Motion */
+  --zd-ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+  --zd-ease-emerge: cubic-bezier(0.19, 1, 0.22, 1);
+  --zd-duration-rapid: 200ms;
+  --zd-duration-fluid: 400ms;
+  --zd-duration-emerge: 600ms;
+}
+
+.text-huge {
+  font-size: clamp(4rem, 12vw, 8.5rem);
+  line-height: 0.75;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: -0.03em;
+  color: var(--zd-cyan);
+}
+
+.text-huge-secondary {
+  font-size: clamp(2rem, 6vw, 4rem);
+  line-height: 0.8;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--zd-text-secondary);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.02) 0px,
+    rgba(0, 255, 194, 0.01) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  z-index: 9999;
+  opacity: 0.3;
+}
+
+:root {
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+}
+
+body:hover {
+  background: radial-gradient(
+    circle at var(--cursor-x) var(--cursor-y),
+    rgba(0, 255, 194, 0.03) 0%,
+    transparent 50%
+  );
+}

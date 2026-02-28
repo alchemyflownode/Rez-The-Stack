@@ -1,0 +1,374 @@
+﻿# executive_mcp_server.py
+# Sovereign Executive – Local Notes, Reminders, and Tasks
+# No cloud. No telemetry. Your brain, augmented.
+
+import os
+import json
+import sqlite3
+import subprocess
+import sys
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+from pathlib import Path
+
+# Try to install any missing dependencies
+try:
+    from mcp.server.fastmcp import FastMCP
+except ImportError:
+    print("🔄 Installing mcp[cli]...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "mcp[cli]"])
+    from mcp.server.fastmcp import FastMCP
+
+# Initialize MCP Server
+mcp = FastMCP("executive")
+
+# ============================================================================
+# CONFIGURATION – Your Sovereign Brain lives here
+# ============================================================================
+BRAIN_PATH = "G:/okiru/brain"
+NOTES_PATH = os.path.join(BRAIN_PATH, "daily_notes")
+TASKS_DB = os.path.join(BRAIN_PATH, "tasks.db")
+REMINDERS_DB = os.path.join(BRAIN_PATH, "reminders.db")
+
+# Ensure directories exist
+os.makedirs(NOTES_PATH, exist_ok=True)
+
+# ============================================================================
+# DATABASE SETUP – Local SQLite for tasks/reminders
+# ============================================================================
+def init_database():
+    """Initialize SQLite databases for tasks and reminders"""
+    
+    # Tasks database
+    conn = sqlite3.connect(TASKS_DB)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            priority TEXT DEFAULT 'medium',
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            due_date TIMESTAMP,
+            completed_at TIMESTAMP,
+            tags TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    
+    # Reminders database
+    conn = sqlite3.connect(REMINDERS_DB)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            message TEXT,
+            trigger_time TIMESTAMP NOT NULL,
+            recurring TEXT,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_triggered TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_database()
+
+# ============================================================================
+# NOTES TOOLS – Your Sovereign Brain
+# ============================================================================
+@mcp.tool()
+def take_note(content: str, filename: str = "inbox.md") -> str:
+    """
+    Append a thought or note to a local markdown file.
+    Use this for quick capture of ideas, meeting notes, or journaling.
+    
+    Args:
+        content: The note content to save
+        filename: The markdown file to append to (default: inbox.md)
+    
+    Returns:
+        Confirmation message
+    """
+    path = os.path.join(NOTES_PATH, filename)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"\n## {timestamp}\n{content}\n---\n")
+    
+    return f"📝 Note archived in {filename}. Your brain is growing."
+
+@mcp.tool()
+def search_notes(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
+    """
+    Search all notes for a specific term or phrase.
+    Semantic search across your entire sovereign brain.
+    
+    Args:
+        query: The search term
+        max_results: Maximum number of results to return
+    
+    Returns:
+        List of matching notes with context
+    """
+    results = []
+    for filename in os.listdir(NOTES_PATH):
+        if not filename.endswith('.md'):
+            continue
+            
+        path = os.path.join(NOTES_PATH, filename)
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        if query.lower() in content.lower():
+            # Find surrounding context (simple implementation)
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                if query.lower() in line.lower():
+                    context = line[:200]
+                    results.append({
+                        'filename': filename,
+                        'line': i + 1,
+                        'context': context,
+                        'full_path': path
+                    })
+                    if len(results) >= max_results:
+                        break
+    
+    return results
+
+@mcp.tool()
+def list_notes(limit: int = 20) -> List[Dict[str, Any]]:
+    """
+    List all notes in your sovereign brain.
+    
+    Args:
+        limit: Maximum number of notes to return
+    
+    Returns:
+        List of note metadata
+    """
+    notes = []
+    for filename in sorted(os.listdir(NOTES_PATH), reverse=True)[:limit]:
+        if not filename.endswith('.md'):
+            continue
+        
+        path = os.path.join(NOTES_PATH, filename)
+        stat = os.stat(path)
+        notes.append({
+            'filename': filename,
+            'size': stat.st_size,
+            'modified': datetime.fromtimestamp(stat.st_mtime).isoformat(),
+            'path': path
+        })
+    
+    return notes
+
+# ============================================================================
+# TASKS TOOLS – Your Sovereign Todo List
+# ============================================================================
+@mcp.tool()
+def create_task(title: str, description: str = "", priority: str = "medium", due_date: Optional[str] = None) -> str:
+    """
+    Create a new task.
+    
+    Args:
+        title: Task title
+        description: Optional detailed description
+        priority: low, medium, high, critical
+        due_date: Optional due date (ISO format)
+    
+    Returns:
+        Confirmation with task ID
+    """
+    conn = sqlite3.connect(TASKS_DB)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO tasks (title, description, priority, due_date)
+        VALUES (?, ?, ?, ?)
+    ''', (title, description, priority, due_date))
+    
+    task_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return f"✅ Task created: '{title}' (ID: {task_id})"
+
+@mcp.tool()
+def list_tasks(status: str = "pending", priority: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    List tasks filtered by status and priority.
+    
+    Args:
+        status: pending, completed, all
+        priority: low, medium, high, critical (optional)
+    
+    Returns:
+        List of tasks
+    """
+    conn = sqlite3.connect(TASKS_DB)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    query = "SELECT * FROM tasks WHERE 1=1"
+    params = []
+    
+    if status != 'all':
+        query += " AND status = ?"
+        params.append(status)
+    
+    if priority:
+        query += " AND priority = ?"
+        params.append(priority)
+    
+    query += " ORDER BY priority DESC, due_date ASC"
+    
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    
+    tasks = [dict(row) for row in rows]
+    conn.close()
+    
+    return tasks
+
+@mcp.tool()
+def complete_task(task_id: int) -> str:
+    """
+    Mark a task as completed.
+    
+    Args:
+        task_id: ID of the task to complete
+    
+    Returns:
+        Confirmation message
+    """
+    conn = sqlite3.connect(TASKS_DB)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        UPDATE tasks 
+        SET status = 'completed', completed_at = ? 
+        WHERE id = ?
+    ''', (datetime.now().isoformat(), task_id))
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        return f"❌ Task {task_id} not found"
+    
+    conn.commit()
+    conn.close()
+    
+    return f"✅ Task {task_id} marked as completed"
+
+# ============================================================================
+# REMINDERS TOOLS – Your Constitutional Alarm System
+# ============================================================================
+@mcp.tool()
+def create_reminder(title: str, message: str, minutes_from_now: int) -> str:
+    """
+    Create a reminder that triggers after a specified number of minutes.
+    
+    Args:
+        title: Short title for the reminder
+        message: Detailed reminder message
+        minutes_from_now: Minutes until reminder triggers
+    
+    Returns:
+        Confirmation with reminder ID
+    """
+    trigger_time = datetime.now() + timedelta(minutes=minutes_from_now)
+    
+    conn = sqlite3.connect(REMINDERS_DB)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO reminders (title, message, trigger_time)
+        VALUES (?, ?, ?)
+    ''', (title, message, trigger_time.isoformat()))
+    
+    reminder_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return f"⏰ Reminder set: '{title}' in {minutes_from_now} minutes (ID: {reminder_id})"
+
+@mcp.tool()
+def check_reminders() -> List[Dict[str, Any]]:
+    """
+    Check for any due reminders.
+    Called automatically by JARVIS during causality checks.
+    
+    Returns:
+        List of due reminders
+    """
+    now = datetime.now().isoformat()
+    
+    conn = sqlite3.connect(REMINDERS_DB)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT * FROM reminders 
+        WHERE status = 'active' AND trigger_time <= ?
+    ''', (now,))
+    
+    rows = cursor.fetchall()
+    due = [dict(row) for row in rows]
+    
+    # Mark them as triggered
+    for reminder in due:
+        cursor.execute('''
+            UPDATE reminders 
+            SET status = 'triggered', last_triggered = ? 
+            WHERE id = ?
+        ''', (now, reminder['id']))
+    
+    conn.commit()
+    conn.close()
+    
+    return due
+
+# ============================================================================
+# HEALTH CHECK – For Causality Feed
+# ============================================================================
+@mcp.tool()
+def executive_health() -> Dict[str, Any]:
+    """
+    Get health status of the Executive MCP.
+    """
+    note_count = len([f for f in os.listdir(NOTES_PATH) if f.endswith('.md')])
+    
+    conn = sqlite3.connect(TASKS_DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE status = 'pending'")
+    pending_tasks = cursor.fetchone()[0]
+    conn.close()
+    
+    conn = sqlite3.connect(REMINDERS_DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM reminders WHERE status = 'active'")
+    active_reminders = cursor.fetchone()[0]
+    conn.close()
+    
+    return {
+        'status': 'healthy',
+        'notes': note_count,
+        'pending_tasks': pending_tasks,
+        'active_reminders': active_reminders,
+        'brain_path': BRAIN_PATH
+    }
+
+if __name__ == "__main__":
+    print("\n" + "="*50)
+    print("📋 SOVEREIGN EXECUTIVE MCP")
+    print("="*50)
+    print("Notes Path:   ", NOTES_PATH)
+    print("Tasks DB:     ", TASKS_DB)
+    print("Reminders DB: ", REMINDERS_DB)
+    print("="*50 + "\n")
+    mcp.run()

@@ -1,0 +1,68 @@
+﻿:root {
+  /* ===== PREMIUM COLOR PALETTE ===== */
+  --bg-deep: #050505;  /* Deep charcoal instead of pure black */
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-surface-hover: rgba(255, 255, 255, 0.05);
+  --bg-surface-active: rgba(139, 92, 246, 0.1);
+  
+  /* Glass Surfaces */
+  --glass-ultra-thin: rgba(255, 255, 255, 0.02);
+  --glass-thin: rgba(255, 255, 255, 0.03);
+  --glass-medium: rgba(255, 255, 255, 0.05);
+  --glass-heavy: rgba(255, 255, 255, 0.08);
+  
+  /* Primary - Soft Purple */
+  --primary: #8B5CF6;
+  --primary-soft: rgba(139, 92, 246, 0.15);
+  --primary-glow: 0 0 30px rgba(139, 92, 246, 0.3);
+  --primary-hover: #A78BFA;
+  
+  /* Secondary - Soft Emerald */
+  --secondary: #10B981;
+  --secondary-soft: rgba(16, 185, 129, 0.1);
+  
+  /* Accent - Deep Blue */
+  --accent: #3B82F6;
+  
+  /* Warning - Soft Red */
+  --warning: #EF4444;
+  --warning-soft: rgba(239, 68, 68, 0.1);
+  
+  /* ===== PREMIUM TEXT HIERARCHY ===== */
+  --text-primary: rgba(255, 255, 255, 0.95);   /* Headers, active */
+  --text-secondary: rgba(255, 255, 255, 0.7);  /* Body text */
+  --text-tertiary: rgba(255, 255, 255, 0.5);   /* Labels, metadata */
+  --text-quaternary: rgba(255, 255, 255, 0.3); /* Disabled, hints */
+  --text-muted: rgba(255, 255, 255, 0.2);      /* Very subtle */
+  
+  /* ===== PREMIUM BORDERS ===== */
+  --border-ultra-light: rgba(255, 255, 255, 0.05);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.15);
+  --border-heavy: rgba(255, 255, 255, 0.2);
+  
+  /* ===== PREMIUM RADII ===== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+  --radius-full: 9999px;
+  
+  /* ===== PREMIUM SHADOWS ===== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px var(--primary-soft);
+  
+  /* ===== SPACING ===== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+}

@@ -1,0 +1,237 @@
+﻿/* ================================================================
+   PREMIUM UI - TRUE CHARCOAL PALETTE & INVISIBLE SPLITTERS
+   Foundation: #0B0D10 • Surface: #151A21 • Borders: #273140
+   Accent: #40E0FF Electric Cyan
+   ================================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* True Charcoal Palette - 2026 Mood Mode */
+  --charcoal-foundation: #0B0D10;  /* Deep base layer */
+  --charcoal-surface: #151A21;      /* Elevated panels */
+  --charcoal-surface-light: #1E2430; /* Hover states */
+  --charcoal-border: #273140;        /* Sharp 1px separators */
+  --charcoal-border-light: #324153;  /* Lighter borders */
+  
+  /* Electric Accents */
+  --accent-cyan: #40E0FF;            /* Electric Cyan */
+  --accent-cyan-glow: 0 0 15px rgba(64, 224, 255, 0.3);
+  --accent-purple: #7a5af8;          /* Sovereign Purple */
+  --accent-purple-glow: 0 0 15px rgba(122, 90, 248, 0.3);
+  
+  /* Text Hierarchy */
+  --text-primary: #E8E9EA;
+  --text-secondary: #9AA5B5;
+  --text-tertiary: #5F6B7A;
+  
+  /* Mica Effects */
+  --mica-base: rgba(11, 13, 16, 0.85);
+  --mica-surface: rgba(21, 26, 33, 0.8);
+  --mica-blur: blur(20px);
+  
+  /* Spacing - 4px Grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Font Sizes - High Density */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+}
+
+/* ===== MICA SURFACE EFFECTS ===== */
+.mica-foundation {
+  background: var(--mica-base);
+  backdrop-filter: var(--mica-blur);
+  -webkit-backdrop-filter: var(--mica-blur);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.mica-surface {
+  background: var(--mica-surface);
+  backdrop-filter: var(--mica-blur);
+  -webkit-backdrop-filter: var(--mica-blur);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mica-acrylic {
+  background: rgba(21, 26, 33, 0.6);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ===== PREMIUM INVISIBLE SPLITTERS ===== */
+[data-panel-resize-handle] {
+  background: transparent !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease !important;
+  width: 2px !important;
+  position: relative;
+}
+
+[data-panel-resize-handle]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -4px;
+  right: -4px;
+  bottom: 0;
+  background: transparent;
+}
+
+[data-panel-resize-handle]:hover {
+  background: var(--accent-purple) !important;
+  box-shadow: 0 0 12px 1px var(--accent-purple-glow);
+}
+
+/* Vertical splitters */
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle] {
+  height: 2px !important;
+  width: 100% !important;
+}
+
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle]::before {
+  top: -4px;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+}
+
+/* ===== HIGH-DENSITY WORKER GRID ===== */
+.worker-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+  gap: 2px;
+  padding: 2px;
+}
+
+.worker-grid-premium .worker-item {
+  aspect-ratio: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  color: var(--text-tertiary);
+  position: relative;
+}
+
+.worker-grid-premium .worker-item:hover {
+  background: var(--charcoal-surface-light);
+  border-color: var(--charcoal-border);
+  color: var(--text-secondary);
+}
+
+.worker-grid-premium .worker-item.active {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.worker-grid-premium .worker-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--accent-cyan);
+  box-shadow: var(--accent-cyan-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Tooltip on hover */
+.worker-grid-premium .worker-item {
+  position: relative;
+}
+
+.worker-grid-premium .worker-item:hover::before {
+  content: attr(data-name);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--charcoal-surface);
+  border: 1px solid var(--charcoal-border);
+  border-radius: 2px;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  z-index: 100;
+  margin-bottom: 4px;
+}
+
+/* ===== TYPOGRAPHY ===== */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: var(--charcoal-foundation);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono, code, pre, .terminal, .worker-details pre {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+/* ===== STATUS INDICATORS ===== */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.active {
+  background: var(--accent-cyan);
+  box-shadow: var(--accent-cyan-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.idle {
+  background: var(--text-tertiary);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ===== SCROLLBARS ===== */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--charcoal-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}

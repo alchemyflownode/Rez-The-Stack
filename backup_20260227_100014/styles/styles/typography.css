@@ -1,0 +1,63 @@
+﻿/* src/styles/typography.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Font Families */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  
+  /* Text Colors - Never pure white */
+  --text-active: #F8F8F8;
+  --text-primary: #E0E0E0;
+  --text-secondary: #AAAAAA;
+  --text-tertiary: #666666;
+  --text-disabled: #444444;
+  --text-muted: #555555;
+  
+  /* Font Sizes - Fluid Scale */
+  --text-xs: clamp(0.75rem, 0.7vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8vw, 1rem);
+  --text-base: clamp(1rem, 1vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1.2vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.5vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 2vw, 1.875rem);
+  --text-3xl: clamp(1.875rem, 2.5vw, 2.25rem);
+  
+  /* Letter Spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+}
+
+body {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Kernel Text - Technical/Code elements */
+.kernel-text {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* Active/Highlighted Text */
+.text-active {
+  color: var(--text-active);
+  font-weight: 500;
+}
+
+/* Gradient Text for Neural Elements */
+.neural-text {
+  background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

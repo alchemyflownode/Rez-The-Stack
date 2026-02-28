@@ -1,0 +1,280 @@
+﻿/* ================================================================
+   PURE OBSIDIAN - UNIFIED UI THEME
+   Single source of truth • No mixing • Consistent
+   ================================================================ */
+
+:root {
+  /* Obsidian Core Palette - Single source */
+  --obsidian-deep: #0A0A0C;
+  --obsidian-surface: #121214;
+  --obsidian-elevated: #1A1A1E;
+  --obsidian-glass: rgba(10, 10, 12, 0.85);
+  --obsidian-glass-heavy: rgba(5, 5, 8, 0.95);
+  
+  /* Obsidian Accents - Consistent */
+  --obsidian-cyan: #00FFC2;
+  --obsidian-cyan-dim: #00CC9C;
+  --obsidian-cyan-glow: 0 0 20px rgba(0, 255, 194, 0.2);
+  
+  /* Obsidian Text Hierarchy */
+  --obsidian-text-primary: #FFFFFF;
+  --obsidian-text-secondary: #B0B0B0;
+  --obsidian-text-tertiary: #707070;
+  --obsidian-text-muted: #404040;
+  
+  /* Obsidian Borders */
+  --obsidian-border: rgba(255, 255, 255, 0.08);
+  --obsidian-border-light: rgba(255, 255, 255, 0.03);
+  --obsidian-border-accent: rgba(0, 255, 194, 0.2);
+  
+  /* Obsidian Shadows */
+  --obsidian-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --obsidian-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --obsidian-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.6);
+  
+  /* Obsidian Blur */
+  --obsidian-blur: blur(40px);
+  --obsidian-blur-light: blur(20px);
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--obsidian-deep);
+  color: var(--obsidian-text-primary);
+  font-family: var(--font-sans);
+}
+
+/* ===== OBSIDIAN PANEL ===== */
+.obsidian-panel {
+  background: var(--obsidian-glass);
+  backdrop-filter: var(--obsidian-blur);
+  border: 1px solid var(--obsidian-border);
+  border-radius: 16px;
+  box-shadow: var(--obsidian-shadow-md);
+  transition: all 0.2s ease;
+}
+
+.obsidian-panel:hover {
+  border-color: var(--obsidian-border-accent);
+  box-shadow: var(--obsidian-shadow-lg), var(--obsidian-cyan-glow);
+}
+
+/* ===== OBSIDIAN CARD ===== */
+.obsidian-card {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.obsidian-card:hover {
+  border-color: var(--obsidian-cyan);
+  transform: translateY(-2px);
+  box-shadow: var(--obsidian-shadow-md);
+}
+
+/* ===== OBSIDIAN BUTTON ===== */
+.obsidian-button {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: var(--obsidian-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.obsidian-button:hover {
+  background: var(--obsidian-surface);
+  border-color: var(--obsidian-cyan);
+  color: var(--obsidian-cyan);
+}
+
+.obsidian-button.primary {
+  background: var(--obsidian-cyan);
+  color: var(--obsidian-deep);
+  border: none;
+}
+
+.obsidian-button.primary:hover {
+  background: var(--obsidian-cyan-dim);
+  box-shadow: var(--obsidian-cyan-glow);
+}
+
+/* ===== OBSIDIAN INPUT ===== */
+.obsidian-input {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--obsidian-text-primary);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.obsidian-input:focus {
+  outline: none;
+  border-color: var(--obsidian-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 255, 194, 0.1);
+}
+
+.obsidian-input::placeholder {
+  color: var(--obsidian-text-muted);
+}
+
+/* ===== OBSIDIAN CHAT MESSAGES ===== */
+.obsidian-message {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.obsidian-message.user {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+}
+
+.obsidian-message.assistant {
+  background: var(--obsidian-glass);
+  backdrop-filter: var(--obsidian-blur-light);
+  border: 1px solid var(--obsidian-border-accent);
+}
+
+.obsidian-message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--obsidian-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.obsidian-message-avatar.user {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+}
+
+.obsidian-message-content {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--obsidian-text-secondary);
+}
+
+.obsidian-message-content .timestamp {
+  font-size: 10px;
+  color: var(--obsidian-text-muted);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+/* ===== OBSIDIAN WORKER GRID ===== */
+.obsidian-worker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.obsidian-worker-item {
+  background: var(--obsidian-elevated);
+  border: 1px solid var(--obsidian-border);
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.obsidian-worker-item:hover {
+  border-color: var(--obsidian-cyan);
+  transform: translateY(-2px);
+  box-shadow: var(--obsidian-shadow-sm);
+}
+
+.obsidian-worker-item.selected {
+  border-color: var(--obsidian-cyan);
+  background: rgba(0, 255, 194, 0.05);
+}
+
+.obsidian-worker-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 8px;
+  color: var(--obsidian-cyan);
+}
+
+.obsidian-worker-name {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--obsidian-text-secondary);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.obsidian-worker-category {
+  font-size: 8px;
+  color: var(--obsidian-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== OBSIDIAN STATUS ===== */
+.obsidian-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.obsidian-status-dot.active {
+  background: var(--obsidian-cyan);
+  box-shadow: 0 0 8px var(--obsidian-cyan);
+  animation: pulse 2s infinite;
+}
+
+.obsidian-status-dot.idle {
+  background: var(--obsidian-text-muted);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== OBSIDIAN SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--obsidian-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--obsidian-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--obsidian-cyan);
+}

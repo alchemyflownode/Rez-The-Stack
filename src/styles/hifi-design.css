@@ -1,0 +1,67 @@
+﻿:root {
+  /* ===== iOS ORGANIC RADII (Continuous Curves) ===== */
+  --radius-ios-xl: 28px;
+  --radius-ios-lg: 22px;
+  --radius-ios-md: 14px;
+  
+  /* ===== ADOBE SPECTRUM DEPTH (3-Layer Shadow) ===== */
+  --shadow-adobe: 
+    0 2px 4px rgba(0,0,0,0.4),
+    0 12px 24px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(255,255,255,0.05);
+
+  /* ===== SPRING KINETICS ===== */
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== iOS-STYLE SQUIRCULAR CONTAINER ===== */
+.ios-panel {
+  background: rgba(10, 12, 14, 0.8);
+  backdrop-filter: blur(40px) saturate(150%);
+  border-radius: var(--radius-ios-xl);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-adobe);
+  overflow: hidden;
+}
+
+/* ===== FRAMER-MOTION STYLE BUBBLES ===== */
+.chat-bubble-hifi {
+  transition: transform 0.4s var(--spring-bounce), opacity 0.3s ease;
+  will-change: transform;
+}
+
+.chat-bubble-hifi:hover {
+  transform: scale(1.02);
+}
+
+/* Assistant Bubble (Adobe-Style Softness) */
+.bubble-assistant-hifi {
+  background: #1A1D21;
+  border-radius: 20px 20px 20px 6px;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  color: #E2E8F0;
+}
+
+/* User Bubble (iOS Blue Gradient) */
+.bubble-user-hifi {
+  background: linear-gradient(180deg, #007AFF 0%, #0056D2 100%);
+  border-radius: 20px 20px 6px 20px;
+  padding: 10px 18px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+/* ===== ADOBE-STYLE INPUT BAR ===== */
+.hifi-input-bar {
+  background: rgba(5, 6, 7, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 30px;
+  padding: 8px 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hifi-input-bar:focus-within {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+}

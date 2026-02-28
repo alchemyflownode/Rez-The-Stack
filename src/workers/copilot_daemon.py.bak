@@ -1,0 +1,47 @@
+﻿import keyboard
+import pyperclip
+import requests
+import json
+import sys
+from datetime import datetime
+
+# CONFIG
+KERNEL_URL = "http://localhost:3001/api/kernel"
+HOTKEY = "ctrl+shift+r" 
+
+def get_context():
+    ctx = { "timestamp": datetime.now().isoformat(), "clipboard": "", "active_text": "" }
+    try:
+        ctx["clipboard"] = pyperclip.paste()
+    except: pass
+    return ctx
+
+def on_trigger():
+    print("\n⚡ TRIGGERED - Consulting Sovereign...")
+    ctx = get_context()
+    
+    # Determine intent from clipboard
+    prompt = f"Context: {ctx.clipboard}\nAction: Assist user based on context."
+    if "error" in ctx.clipboard.lower():
+        prompt = f"Context: {ctx.clipboard}\nAction: Fix this error."
+
+    try:
+        res = requests.post(KERNEL_URL, json={"task": prompt}, timeout=30)
+        data = res.json()
+        
+        # Extract content
+        ans = data.get('content') or data.get('answer') or data.get('stats') or "Done."
+        
+        print(f"\n🦊 SOVEREIGN: {ans}")
+        
+        # Copy result to clipboard for immediate use
+        if isinstance(ans, str):
+            pyperclip.copy(ans)
+            print("   (Result copied to clipboard)")
+            
+    except Exception as e:
+        print(f"❌ Kernel Error: {e}")
+
+print(f"🦊 Rez Copilot Active. Press {HOTKEY} to engage.")
+keyboard.add_hotkey(HOTKEY, on_trigger)
+keyboard.wait()

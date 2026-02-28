@@ -1,0 +1,28 @@
+﻿{
+  "registry": {
+    "check_hardware": {
+      "description": "Scans CPU, RAM, GPU and returns stats.",
+      "type": "python",
+      "command": "src/workers/system_agent.py snapshot",
+      "safe": true
+    },
+    "search_web": {
+      "description": "Performs a deep web search.",
+      "type": "python",
+      "command": "src/workers/search_harvester.py",
+      "safe": true
+    },
+    "launch_app": {
+      "description": "Launches a local application.",
+      "type": "powershell",
+      "command": "Start-Process",
+      "safe": true
+    },
+    "create_backup": {
+      "description": "Backs up a directory.",
+      "type": "powershell",
+      "command": "Compress-Archive",
+      "safe": true
+    }
+  }
+}

@@ -1,0 +1,158 @@
+﻿{
+    "results":  [
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:17.5043830+08:00",
+                        "details":  "Python 3.10.11",
+                        "test":  "Python Environment"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:17.5919036+08:00",
+                        "details":  "Missing",
+                        "test":  "Package pynvml"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:17.7028547+08:00",
+                        "details":  "Installed",
+                        "test":  "Package psutil"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.3237494+08:00",
+                        "details":  "Installed",
+                        "test":  "Package requests"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.3704818+08:00",
+                        "details":  "ollama version is 0.14.1",
+                        "test":  "Ollama Binary"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.4884057+08:00",
+                        "details":  "Running",
+                        "test":  "Ollama Service"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.6093675+08:00",
+                        "details":  "Installed",
+                        "test":  "Model smollm2:360m"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.6103680+08:00",
+                        "details":  "Installed",
+                        "test":  "Model qwen2.5:3b"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:19.6123692+08:00",
+                        "details":  "Missing",
+                        "test":  "Model deepseek-coder:6.7b"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:19.6133685+08:00",
+                        "details":  "Missing",
+                        "test":  "Model gemma2:9b"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:19.6434156+08:00",
+                        "details":  "Missing",
+                        "test":  "Model phi3.5:3.8b"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.6454157+08:00",
+                        "details":  "Exists",
+                        "test":  "VRAM Monitor File"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:19.7433099+08:00",
+                        "details":  "Failed",
+                        "test":  "VRAM Monitor Execution"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:19.7453082+08:00",
+                        "details":  "Exists",
+                        "test":  "Orchestrator File"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:20.5705725+08:00",
+                        "details":  "Instantiation error",
+                        "test":  "Orchestrator Smoke Test"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5735719+08:00",
+                        "details":  "Exists",
+                        "test":  "API src\\app\\api\\compute\\hardware\\route.ts"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5745705+08:00",
+                        "details":  "Exists",
+                        "test":  "API src\\app\\api\\compute\\execute\\route.ts"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5755709+08:00",
+                        "details":  "Exists",
+                        "test":  "API src\\app\\api\\frontend\\workers\\route.ts"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5775703+08:00",
+                        "details":  "Exists",
+                        "test":  "useCompute Hook"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5815713+08:00",
+                        "details":  "Clean",
+                        "test":  "Hook Security (eval)"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:20.5845710+08:00",
+                        "details":  "Missing",
+                        "test":  "Type Definitions"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.5905708+08:00",
+                        "details":  "Exists",
+                        "test":  "Control Script"
+                    },
+                    {
+                        "status":  "FAIL",
+                        "timestamp":  "2026-02-26T20:49:20.5925711+08:00",
+                        "details":  "Missing",
+                        "test":  "Brain Directory"
+                    },
+                    {
+                        "status":  "PASS",
+                        "timestamp":  "2026-02-26T20:49:20.7145715+08:00",
+                        "details":  "Clean",
+                        "test":  "Security Audit"
+                    }
+                ],
+    "version":  "5.1-hardened",
+    "passed":  16,
+    "pass_rate":  66.7,
+    "total_tests":  24,
+    "duration_seconds":  3.2507219,
+    "timestamp":  "\/Date(1772110157482)\/",
+    "failed":  8,
+    "security_issues":  [
+
+                        ]
+}

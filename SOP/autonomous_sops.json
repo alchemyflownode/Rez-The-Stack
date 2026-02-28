@@ -1,0 +1,34 @@
+﻿[
+  {
+    "id": "SOP_OPTIMIZE_PC",
+    "description": "Checks system vitals and applies optimizations.",
+    "steps": [
+      {
+        "action": "run_python",
+        "args": "src/api/workers/system_agent.py snapshot",
+        "expected_output": "success"
+      },
+      {
+        "action": "ask_llm",
+        "args": "Analyze these stats and suggest one specific optimization.",
+        "expected_output": "suggestion"
+      }
+    ]
+  },
+  {
+    "id": "SOP_SELF_HEAL",
+    "description": "Attempts to fix a failure by analyzing logs.",
+    "steps": [
+      {
+        "action": "read_file",
+        "args": "error.log",
+        "expected_output": "*"
+      },
+      {
+        "action": "ask_llm",
+        "args": "Read the error log and provide a fix command.",
+        "expected_output": "fix"
+      }
+    ]
+  }
+]

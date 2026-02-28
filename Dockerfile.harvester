@@ -1,0 +1,12 @@
+﻿FROM python:3.11-slim
+
+RUN pip install requests beautifulsoup4
+RUN useradd -m -u 1000 worker
+
+WORKDIR /app
+COPY src/workers/harvester.py /worker.py
+RUN chmod +x /worker.py
+
+USER worker
+
+ENTRYPOINT ["python", "/worker.py"]

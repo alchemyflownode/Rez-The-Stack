@@ -1,0 +1,12 @@
+﻿version: '3.7'
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: rezstack-searxng
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng-data:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+    restart: unless-stopped

@@ -1,0 +1,288 @@
+﻿/* ================================================================
+   SPEC MIRROR - HIGH-FIDELITY DOCUMENT VIEWER
+   Frosted Obsidian • Specular Rim • Physical Chips
+   ================================================================ */
+
+:root {
+  /* Frosted Obsidian Palette */
+  --obsidian-base: rgba(10, 10, 15, 0.85);
+  --obsidian-glass: rgba(20, 20, 30, 0.6);
+  --obsidian-deep: rgba(5, 5, 8, 0.95);
+  
+  /* Specular Rim Colors */
+  --rim-primary: rgba(255, 255, 255, 0.15);
+  --rim-secondary: rgba(255, 255, 255, 0.05);
+  --rim-accent: rgba(0, 255, 194, 0.25);
+  
+  /* Typography */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  
+  /* Text Hierarchy */
+  --text-header: 13px;
+  --text-body: 14px;
+  --text-mono: 13px;
+  
+  /* Physical Chip Colors */
+  --chip-bg: rgba(30, 30, 40, 0.6);
+  --chip-border: rgba(255, 255, 255, 0.08);
+  --chip-pressed: rgba(40, 40, 50, 0.8);
+  
+  /* Metadata Ribbon */
+  --ribbon-bg: linear-gradient(180deg, 
+                rgba(0, 255, 194, 0.1) 0%, 
+                rgba(0, 0, 0, 0) 100%);
+  --ribbon-glow: 0 0 20px rgba(0, 255, 194, 0.2);
+}
+
+/* ===== SPEC MIRROR CONTAINER ===== */
+.spec-mirror {
+  background: var(--obsidian-base);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--rim-primary);
+  border-radius: 24px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Specular Rim Effect */
+.spec-mirror::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--rim-primary) 0%,
+    var(--rim-secondary) 50%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Inner Glow for Depth */
+.spec-mirror::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 23px;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* ===== CONVERGENCE REVEAL ANIMATION ===== */
+@keyframes convergeReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+    filter: blur(20px);
+  }
+  50% {
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.convergence-reveal {
+  animation: convergeReveal 800ms 
+             cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ===== PHYSICAL CHIPS ===== */
+.physical-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: var(--text-mono);
+  font-family: var(--font-mono);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  transform: translateY(0);
+}
+
+.physical-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--rim-accent);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.physical-chip:active {
+  transform: scale(0.95) translateY(0);
+  background: var(--chip-pressed);
+}
+
+/* Recessed effect */
+.physical-chip.recessed {
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(1px);
+}
+
+/* ===== METADATA RIBBON ===== */
+.metadata-ribbon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ribbon-bg);
+  box-shadow: var(--ribbon-glow);
+}
+
+.metadata-ribbon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 255, 194, 0.5) 0%,
+    rgba(0, 255, 194, 0.2) 50%,
+    transparent 100%
+  );
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ===== DOCUMENT LAYERS ===== */
+.document-layer {
+  background: var(--obsidian-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--rim-secondary);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 
+    0 10px 20px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.document-layer.layer-1 {
+  transform: translateZ(10px);
+  box-shadow: 0 15px 25px -12px rgba(0, 0, 0, 0.6);
+}
+
+.document-layer.layer-2 {
+  transform: translateZ(20px);
+  box-shadow: 0 20px 30px -15px rgba(0, 0, 0, 0.7);
+}
+
+/* ===== HAPTIC ACTION BAR ===== */
+.haptic-bar {
+  background: var(--obsidian-glass);
+  backdrop-filter: blur(30px);
+  border: 1px solid var(--rim-primary);
+  border-radius: 40px;
+  padding: 6px;
+  display: inline-flex;
+  gap: 4px;
+  box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.6);
+}
+
+.haptic-button {
+  padding: 8px 20px;
+  border-radius: 32px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.haptic-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.haptic-button:active {
+  transform: scale(0.95);
+  background: var(--chip-bg);
+  color: var(--rim-accent);
+}
+
+.haptic-button.primary {
+  background: rgba(0, 255, 194, 0.1);
+  color: #00FFC2;
+}
+
+.haptic-button.primary:active {
+  background: rgba(0, 255, 194, 0.2);
+}
+
+/* ===== TYPOGRAPHY ===== */
+.spec-header {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+.spec-content {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.spec-content .accent {
+  color: #00FFC2;
+  font-weight: 500;
+}
+
+/* ===== NORMALIZATION STATISTICS ===== */
+.stat-glow {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.stat-glow.cyan {
+  background: #00FFC2;
+  color: #00FFC2;
+}
+
+.stat-glow.purple {
+  background: #8B5CF6;
+  color: #8B5CF6;
+}

@@ -1,0 +1,224 @@
+﻿/* ================================================================
+   SOVEREIGN IDE - JETBRAINS DARCULA-PLUS THEME
+   Professional IDE aesthetics • Mica transparency • High density
+   ================================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* JetBrains Darcula-Plus Palette */
+  --ide-bg: #1e1f22;           /* Deep gray, not pure black */
+  --ide-surface: #2b2d30;       /* Elevated surface */
+  --ide-surface-light: #3c3f44;  /* Hover states */
+  --ide-border: #393b40;         /* Sharp, thin borders */
+  --ide-border-light: #4a4d54;    /* Lighter borders */
+  
+  --ide-accent: #7a5af8;         /* Sovereign Purple */
+  --ide-accent-glow: 0 0 15px rgba(122, 90, 248, 0.3);
+  --ide-accent-dim: #5b4a9a;
+  
+  --ide-text: #bcbec4;           /* Soft white for reading */
+  --ide-text-dim: #8a8c92;        /* Dim text for metadata */
+  --ide-text-bright: #ffffff;     /* Bright for highlights */
+  
+  --ide-success: #4caf50;
+  --ide-warning: #ff9800;
+  --ide-error: #f44336;
+  
+  /* Typography */
+  --ide-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --ide-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Font sizes - High density */
+  --text-xs: 0.65rem;   /* 10.4px */
+  --text-sm: 0.75rem;   /* 12px */
+  --text-base: 0.875rem; /* 14px */
+  --text-lg: 1rem;       /* 16px */
+  
+  /* Panel sizes */
+  --grid-item-size: 40px;
+  --sidebar-width: 240px;
+  --details-width: 320px;
+}
+
+/* ===== MICA TRANSPARENCY EFFECT ===== */
+.windows-mica {
+  background: rgba(30, 31, 34, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== IDE SURFACES ===== */
+.ide-panel {
+  background: var(--ide-surface);
+  border: 1px solid var(--ide-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ide-panel-floating {
+  background: var(--ide-bg);
+  border: 1px solid var(--ide-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== RESIZABLE SPLITTERS ===== */
+[data-panel-group-direction="horizontal"] > [data-panel-resize-handle] {
+  width: 2px;
+  margin: 0 2px;
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+[data-panel-group-direction="horizontal"] > [data-panel-resize-handle]:hover {
+  background: var(--ide-accent);
+  box-shadow: 0 0 10px var(--ide-accent);
+}
+
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle] {
+  height: 2px;
+  margin: 2px 0;
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+[data-panel-group-direction="vertical"] > [data-panel-resize-handle]:hover {
+  background: var(--ide-accent);
+  box-shadow: 0 0 10px var(--ide-accent);
+}
+
+/* ===== WORKER GRID - HIGH DENSITY ===== */
+.ide-worker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 2px;
+  padding: 2px;
+}
+
+.ide-worker-item {
+  aspect-ratio: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  padding: 2px;
+}
+
+.ide-worker-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--ide-border-light);
+}
+
+.ide-worker-item.active {
+  border-color: var(--ide-accent);
+}
+
+.ide-worker-item .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--ide-text-dim);
+}
+
+.ide-worker-item.active .icon {
+  color: var(--ide-accent);
+}
+
+.ide-worker-item .label {
+  font-family: var(--ide-font-mono);
+  font-size: 7px;
+  text-transform: uppercase;
+  color: var(--ide-text-dim);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 36px;
+}
+
+/* ===== ACTIVE PULSE LINE ===== */
+.ide-active-pulse {
+  position: relative;
+}
+
+.ide-active-pulse::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--ide-accent);
+  box-shadow: 0 0 8px var(--ide-accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ===== TITLE BAR ===== */
+.ide-title-bar {
+  height: 40px;
+  background: var(--ide-bg);
+  border-bottom: 1px solid var(--ide-border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  -webkit-app-region: drag;
+}
+
+.ide-title-bar .no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ===== SYSTEM TERMINAL ===== */
+.ide-terminal {
+  background: var(--ide-bg);
+  font-family: var(--ide-font-mono);
+  font-size: var(--text-xs);
+  padding: 8px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.ide-terminal-line {
+  color: var(--ide-text-dim);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.ide-terminal-line .timestamp {
+  color: var(--ide-accent-dim);
+  margin-right: 12px;
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ide-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ide-accent);
+}

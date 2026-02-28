@@ -1,0 +1,7 @@
+﻿:root {
+  --bg-deep: #050507; --bg-surface: #0A0A0F; --bg-elevated: #111118;
+  --text-primary: #FAFAFA; --text-secondary: #A1A1AA; --text-muted: #52525B;
+  --accent-primary: #8B5CF6; --accent-cyan: #00FFC2; --accent-amber: #FFB800;
+  --border-light: rgba(255,255,255,0.05); --border-medium: rgba(255,255,255,0.1);
+  --radius-lg: 12px; --radius-xl: 16px;
+}

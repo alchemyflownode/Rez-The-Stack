@@ -1,0 +1,16 @@
+﻿{
+  "rules": [
+    {
+      "id": "PSALM_91_VERSE_11",
+      "name": "Angelic Guard",
+      "description": "He will command his angels concerning you to guard you in all your ways.",
+      "enforcement": "No unauthorized execution. All commands must pass the Governor."
+    },
+    {
+      "id": "PSALM_91_VERSE_5",
+      "name": "Terror by Night",
+      "description": "You will not fear the terror of night, nor the arrow that flies by day.",
+      "enforcement": "system_monitor must watch for anomalies (high CPU, unknown processes)."
+    }
+  ]
+}

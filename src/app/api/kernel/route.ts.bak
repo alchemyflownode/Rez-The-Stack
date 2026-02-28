@@ -1,0 +1,114 @@
+﻿import { NextRequest, NextResponse } from 'next/server';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+
+const execAsync = promisify(exec);
+
+export async function POST(req: NextRequest) {
+  try {
+    const { task } = await req.json();
+    const lower = task.toLowerCase();
+    console.log(`🧠 Processing: "${task}"`);
+
+    // Route to appropriate worker
+    let result;
+
+    // System Monitoring
+    if (lower.includes('cpu') || lower.includes('ram') || lower.includes('memory') || 
+        lower.includes('gpu') || lower.includes('vitals') || lower.includes('health')) {
+      console.log('→ Routing to system_monitor');
+      const scriptPath = path.join(process.cwd(), 'src/workers/system_agent.py');
+      const { stdout } = await execAsync(`python "${scriptPath}" snapshot`);
+      result = JSON.parse(stdout);
+      result.worker = 'system_monitor';
+    }
+
+    // App Launcher
+    else if (lower.includes('open ') || lower.includes('launch ') || lower.includes('start ')) {
+      console.log('→ Routing to app_launcher');
+      const scriptPath = path.join(process.cwd(), 'src/workers/app_launcher.py');
+      let app = lower.replace('open ', '').replace('launch ', '').replace('start ', '').trim();
+      const { stdout } = await execAsync(`python "${scriptPath}" "${app}"`);
+      result = JSON.parse(stdout);
+      result.worker = 'app_launcher';
+    }
+
+    // Deep Search
+    // Deep Search if (lower.includes('search') || lower.includes('research') || lower.includes('find') || lower.includes('look up')) {
+      console.log('→ Routing to deepsearch (real)');
+      const scriptPath = path.join(process.cwd(), 'src/workers/search_worker.py');
+      try {
+        const { stdout } = await execAsync(`python "${scriptPath}" "${task}"`);
+        result = JSON.parse(stdout);
+        result.worker = 'deepsearch';
+      } catch (searchError) {
+        console.error('Search worker error, using fallback:', searchError);
+        // Fallback to API endpoint
+        const searchRes = await fetch('http://localhost:3001/api/workers/deepsearch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task })
+        });
+        result = await searchRes.json();
+      }
+    } = await execAsync(`python "${scriptPath}" "${task}"`);
+      result = JSON.parse(stdout);
+      result.worker = 'deepsearch';
+    }
+
+    // Code/Mutation
+    else if (lower.includes('code') || lower.includes('function') || lower.includes('script') ||
+             lower.includes('clean') || lower.includes('fix') || lower.includes('bug')) {
+      console.log('→ Routing to mutation_worker');
+      const scriptPath = path.join(process.cwd(), 'src/workers/mutation_worker.py');
+      const { stdout } = await execAsync(`python "${scriptPath}" .`);
+      result = JSON.parse(stdout);
+      result.worker = 'mutation';
+    }
+
+    // File Operations
+    else if (lower.includes('file') || lower.includes('list') || lower.includes('directory')) {
+      console.log('→ Routing to file_worker');
+      const scriptPath = path.join(process.cwd(), 'src/workers/file_worker.py');
+      const { stdout } = await execAsync(`python "${scriptPath}" "${task}"`);
+      result = JSON.parse(stdout);
+      result.worker = 'file_worker';
+    }
+
+    // Default to Ollama
+    else {
+      console.log('→ Routing to cortex (Ollama)');
+      const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3.2:3b',
+          prompt: task,
+          stream: false
+        })
+      });
+      const data = await ollamaRes.json();
+      result = { 
+        success: true, 
+        content: data.response,
+        worker: 'cortex'
+      };
+    }
+
+    return NextResponse.json(result);
+
+  } catch (error: any) {
+    console.error('❌ Kernel error:', error);
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ status: 'sovereign', version: '2026' });
+}
+
+

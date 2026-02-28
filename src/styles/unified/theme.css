@@ -1,0 +1,82 @@
+﻿/* src/styles/unified/theme.css - ZERO DRIFT EDITION */
+:root {
+  /* Deep foundation */
+  --bg-deep: var(--bg-deep);
+  --bg-surface: var(--bg-surface);
+  --bg-elevated: #1A1A1E;
+  
+  /* ZERO DRIFT CYAN - Primary accent */
+  --accent-primary: var(--accent-cyan);  /* WAS: var(--accent-primary) */
+  --accent-cyan: var(--accent-cyan);
+  --accent-amber: var(--accent-amber);
+  --accent-emerald: var(--accent-emerald);
+  --accent-red: var(--accent-red);
+  
+  /* Glass effects */
+  --glass-ultra-thin: rgba(18, 18, 20, 0.3);
+  --glass-thin: rgba(18, 18, 20, 0.5);
+  --glass-medium: rgba(18, 18, 20, 0.7);
+  --glass-heavy: rgba(18, 18, 20, 0.9);
+  
+  /* Text hierarchy - CRITICAL */
+  --text-primary: rgba(255, 255, 255, 0.95);  /* Headers */
+  --text-secondary: rgba(255, 255, 255, 0.7); /* Body */
+  --text-tertiary: rgba(255, 255, 255, 0.5);  /* Labels */
+  --text-muted: rgba(255, 255, 255, 0.3);     /* Metadata */
+  --text-dim: rgba(255, 255, 255, 0.1);        /* Borders */
+  
+  /* Radii - brutalist */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  
+  /* Motion */
+  --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fluid: 400ms;
+}
+
+.text-huge {
+  font-size: clamp(4rem, 12vw, 8.5rem);
+  line-height: 0.75;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent-cyan);
+}
+
+/* Scanline effect */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.02) 0px,
+    rgba(0, 255, 194, 0.01) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  z-index: 9999;
+  opacity: 0.3;
+}
+
+/* Cursor tracking */
+:root {
+  --cursor-x: 50%;
+  --cursor-y: 50%;
+}
+
+body {
+  background: radial-gradient(
+    circle at var(--cursor-x) var(--cursor-y),
+    rgba(0, 255, 194, 0.03) 0%,
+    transparent 50%
+  );
+}
+

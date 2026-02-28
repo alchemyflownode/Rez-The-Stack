@@ -1,0 +1,284 @@
+﻿/* ================================================================
+   PREMIUM MACOS/ADOBE SUITE STYLES
+   Clean • Professional • Intuitive
+   ================================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* macOS-like color palette */
+  --bg-primary: #1E1E1E;        /* Adobe dark theme */
+  --bg-secondary: #2D2D2D;       /* Slightly lighter */
+  --bg-tertiary: #3E3E3E;        /* Hover states */
+  --bg-panel: #252525;            /* Panel background */
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+  --text-tertiary: #808080;
+  
+  --accent-blue: #0A84FF;        /* macOS blue */
+  --accent-purple: #BF5AF2;      /* Adobe purple */
+  --accent-green: #32D74B;        /* Success */
+  --accent-red: #FF453A;          /* Error/Warning */
+  
+  --border-light: rgba(255,255,255,0.1);
+  --border-medium: rgba(255,255,255,0.15);
+  
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  
+  /* Adobe-like spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  
+  /* Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* ===== PREMIUM COMPONENTS ===== */
+
+/* macOS-style toolbar */
+.toolbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: var(--space-sm) var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  -webkit-app-region: drag;
+}
+
+.toolbar-button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-app-region: no-drag;
+}
+
+.toolbar-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.toolbar-button.primary {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.toolbar-button.primary:hover {
+  background: #0A74FF;
+}
+
+/* Adobe-like panels */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: var(--space-lg);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+/* macOS-style cards */
+.card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: var(--space-md);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s;
+}
+
+.card:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Adobe-like grid items */
+.grid-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.grid-item:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-blue);
+}
+
+/* macOS-style sliders */
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-blue);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Adobe-like dropdown */
+.select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: var(--accent-blue);
+}
+
+/* macOS-style badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.badge.blue {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.badge.purple {
+  background: var(--accent-purple);
+  color: white;
+}
+
+/* Adobe-like tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-secondary);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.tab {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* macOS-style scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}
+
+/* Adobe-like dividers */
+.divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: var(--space-md) 0;
+}
+
+.divider.vertical {
+  width: 1px;
+  height: auto;
+  margin: 0 var(--space-md);
+}
+
+/* Chat-specific styles */
+.message-bubble-user {
+  background: var(--accent-blue);
+}
+
+.message-bubble-assistant {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.typing-indicator span {
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* Quick action buttons */
+.quick-action {
+  @apply text-xs px-2 py-1 bg-white/5 hover:bg-white/10 rounded flex items-center gap-1;
+}
