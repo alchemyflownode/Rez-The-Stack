@@ -9,27 +9,36 @@ interface SystemStats {
   gpu: { available: boolean; name?: string; load?: number; temp?: number };
 }
 
-export default function PCManagerWidget({ onAction }: { onAction: (cmd: string) => void }) {
+interface PCManagerWidgetProps {
+  onAction: (cmd: string) => void;
+}
+
+const PCManagerWidget: React.FC<PCManagerWidgetProps> = ({ onAction }) => {
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // FIX: Call the REAL endpoint
       const res = await fetch('/api/system/snapshot');
       const data = await res.json();
       setStats(data);
     } catch {
-      // Fallback mock
       setStats({
-        cpu: { percent: 25 }, memory: { percent: 50 }, disk: { percent: 60 }, gpu: { available: false }
+        cpu: { percent: 25 },
+        memory: { percent: 50 },
+        disk: { percent: 60 },
+        gpu: { available: false }
       });
     }
     setLoading(false);
   };
 
-  useEffect(() => { fetchStats(); const i = setInterval(fetchStats, 3000); return () => clearInterval(i); }, []);
+  useEffect(() => { 
+    fetchStats(); 
+    const i = setInterval(fetchStats, 3000); 
+    return () => clearInterval(i); 
+  }, []);
 
   if (!stats) return <div className="p-4 text-white/50">Loading...</div>;
 
@@ -42,7 +51,6 @@ export default function PCManagerWidget({ onAction }: { onAction: (cmd: string) 
         </button>
       </div>
 
-      {/* Quick Stats Bars */}
       <div className="grid grid-cols-4 gap-2 text-center text-xs">
         <div>
           <div className="text-white/40">CPU</div>
@@ -66,7 +74,6 @@ export default function PCManagerWidget({ onAction }: { onAction: (cmd: string) 
         </div>
       </div>
 
-      {/* EXPOSED COMMAND BUTTONS */}
       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
         <button 
           onClick={() => onAction('Check system health')}
@@ -84,4 +91,7 @@ export default function PCManagerWidget({ onAction }: { onAction: (cmd: string) 
       </div>
     </div>
   );
-}
+};
+
+// Export as default
+export default PCManagerWidget;

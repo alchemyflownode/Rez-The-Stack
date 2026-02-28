@@ -1,0 +1,9 @@
+{
+  "id": "mem_1772283931006",
+  "timestamp": "2026-02-28T13:05:31.006Z",
+  "sourceDomain": "conversation",
+  "targetDomain": "user_preferences",
+  "context": "User asked about AI memory systems",
+  "patterns": [],
+  "applications": 1
+}

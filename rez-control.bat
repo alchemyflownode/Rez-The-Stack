@@ -52,11 +52,18 @@ set NEXT_TURBOPACK=0
 
 echo [5/5] Spawning Server...
 start "REZ HIVE SERVER" cmd /k "bun run next dev -p 3001 --webpack"
+
+:: Wait for server to start
+timeout /t 5 >nul
+
+:: OPEN BROWSER AUTOMATICALLY to your dashboard
 echo.
 echo ========================================
 echo   SERVER ONLINE
-echo   Interface: http://localhost:3001
+echo   Opening dashboard in browser...
 echo ========================================
+start http://localhost:3001
+
 pause
 goto menu
 
@@ -68,7 +75,9 @@ pause
 goto menu
 
 :restart
+echo Restarting...
 goto stop
+timeout /t 2 >nul
 goto start
 
 :clean

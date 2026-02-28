@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Deep Search
-    // Deep Search if (lower.includes('search') || lower.includes('research') || lower.includes('find') || lower.includes('look up')) {
+    else if (lower.includes('search') || lower.includes('research') || lower.includes('find') || lower.includes('look up')) {
       console.log('→ Routing to deepsearch (real)');
       const scriptPath = path.join(process.cwd(), 'src/workers/search_worker.py');
       try {
@@ -52,9 +52,6 @@ export async function POST(req: NextRequest) {
         });
         result = await searchRes.json();
       }
-    } = await execAsync(`python "${scriptPath}" "${task}"`);
-      result = JSON.parse(stdout);
-      result.worker = 'deepsearch';
     }
 
     // Code/Mutation
@@ -110,5 +107,3 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({ status: 'sovereign', version: '2026' });
 }
-
-

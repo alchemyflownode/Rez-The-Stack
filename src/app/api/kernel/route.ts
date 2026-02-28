@@ -11,40 +11,77 @@ export async function POST(req: NextRequest) {
     const lower = task.toLowerCase();
     console.log(`🧠 Processing: "${task}"`);
 
-    // Route to appropriate worker
     let result;
 
-    // System Monitoring
-    if (lower.includes('cpu') || lower.includes('ram') || lower.includes('memory') || 
-        lower.includes('gpu') || lower.includes('vitals') || lower.includes('health')) {
-      console.log('→ Routing to system_monitor');
-      const scriptPath = path.join(process.cwd(), 'src/workers/system_agent.py');
-      const { stdout } = await execAsync(`python "${scriptPath}" snapshot`);
-      result = JSON.parse(stdout);
-      result.worker = 'system_monitor';
+    // ===== HIGHEST PRIORITY - MEMORY & DEDUCTION =====
+    if (lower.includes('based on') || 
+        lower.includes('remember') || 
+        lower.includes('recall') || 
+        lower.includes('previous') ||
+        lower.includes('learn from') ||
+        (lower.includes('memory') && !lower.includes('ram'))) {
+      
+      console.log('→ Routing to memory/deduction system');
+      
+      try {
+        // Fetch memories from learn API
+        const memRes = await fetch('http://localhost:3001/api/learn');
+        const memories = await memRes.json();
+        
+        // Create context from memories
+        const memoryContext = memories.memories?.map((m: any) => 
+          `Previous: ${m.context} (${m.sourceDomain})`
+        ).join('\n') || 'No previous memories';
+        
+        // Ask Ollama with memory context
+        const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'llama3.2:3b',
+            prompt: `Context from previous conversations:\n${memoryContext}\n\nUser now asks: "${task}"\n\nProvide a response that references relevant past interactions.`,
+            stream: false
+          })
+        });
+        const data = await ollamaRes.json();
+        result = { 
+          success: true, 
+          content: data.response,
+          worker: 'memory_deduction',
+          memories_used: memories.memories?.length || 0
+        };
+      } catch (memError) {
+        console.error('Memory error, falling back:', memError);
+        // Fallback to regular cortex
+        const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'llama3.2:3b',
+            prompt: task,
+            stream: false
+          })
+        });
+        const data = await ollamaRes.json();
+        result = { 
+          success: true, 
+          content: data.response,
+          worker: 'cortex'
+        };
+      }
     }
 
-    // App Launcher
-    else if (lower.includes('open ') || lower.includes('launch ') || lower.includes('start ')) {
-      console.log('→ Routing to app_launcher');
-      const scriptPath = path.join(process.cwd(), 'src/workers/app_launcher.py');
-      let app = lower.replace('open ', '').replace('launch ', '').replace('start ', '').trim();
-      const { stdout } = await execAsync(`python "${scriptPath}" "${app}"`);
-      result = JSON.parse(stdout);
-      result.worker = 'app_launcher';
-    }
-
-    // Deep Search
-    else if (lower.includes('search') || lower.includes('research') || lower.includes('find') || lower.includes('look up')) {
-      console.log('→ Routing to deepsearch (real)');
+    // ===== SEARCH (but not memory-related) =====
+    else if ((lower.includes('search') || lower.includes('find') || lower.includes('research')) 
+             && !lower.includes('memory')) {
+      console.log('→ Routing to deepsearch');
       const scriptPath = path.join(process.cwd(), 'src/workers/search_worker.py');
       try {
         const { stdout } = await execAsync(`python "${scriptPath}" "${task}"`);
         result = JSON.parse(stdout);
         result.worker = 'deepsearch';
       } catch (searchError) {
-        console.error('Search worker error, using fallback:', searchError);
-        // Fallback to API endpoint
+        console.error('Search worker error:', searchError);
         const searchRes = await fetch('http://localhost:3001/api/workers/deepsearch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -54,28 +91,49 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Code/Mutation
-    else if (lower.includes('code') || lower.includes('function') || lower.includes('script') ||
-             lower.includes('clean') || lower.includes('fix') || lower.includes('bug')) {
-      console.log('→ Routing to mutation_worker');
-      const scriptPath = path.join(process.cwd(), 'src/workers/mutation_worker.py');
-      const { stdout } = await execAsync(`python "${scriptPath}" .`);
+    // ===== APP LAUNCHING =====
+    else if (lower.includes('open ') || lower.includes('launch ') || lower.includes('start ')) {
+      console.log('→ Routing to app_launcher');
+      const scriptPath = path.join(process.cwd(), 'src/workers/app_launcher.py');
+      let app = lower.replace('open ', '').replace('launch ', '').replace('start ', '').trim();
+      const { stdout } = await execAsync(`python "${scriptPath}" "${app}"`);
       result = JSON.parse(stdout);
-      result.worker = 'mutation';
+      result.worker = 'app_launcher';
     }
 
-    // File Operations
-    else if (lower.includes('file') || lower.includes('list') || lower.includes('directory')) {
-      console.log('→ Routing to file_worker');
-      const scriptPath = path.join(process.cwd(), 'src/workers/file_worker.py');
-      const { stdout } = await execAsync(`python "${scriptPath}" "${task}"`);
-      result = JSON.parse(stdout);
-      result.worker = 'file_worker';
+    // ===== CODE/MUTATION =====
+    else if (lower.includes('code') || lower.includes('function') || lower.includes('script')) {
+      console.log('→ Routing to cortex for code');
+      const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3.2:3b',
+          prompt: task,
+          stream: false
+        })
+      });
+      const data = await ollamaRes.json();
+      result = { 
+        success: true, 
+        content: data.response,
+        worker: 'cortex'
+      };
     }
 
-    // Default to Ollama
+    // ===== SYSTEM MONITORING (lowest priority - only pure hardware queries) =====
+    else if ((lower.includes('cpu') || lower.includes('gpu') || lower.includes('temperature')) ||
+             (lower.includes('ram') && !lower.includes('memory'))) {
+      console.log('→ Routing to system_monitor');
+      const scriptPath = path.join(process.cwd(), 'src/workers/system_agent.py');
+      const { stdout } = await execAsync(`python "${scriptPath}" snapshot`);
+      result = JSON.parse(stdout);
+      result.worker = 'system_monitor';
+    }
+
+    // ===== DEFAULT =====
     else {
-      console.log('→ Routing to cortex (Ollama)');
+      console.log('→ Routing to cortex (default)');
       const ollamaRes = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
