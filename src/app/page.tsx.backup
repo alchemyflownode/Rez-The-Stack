@@ -1,280 +1,650 @@
 ﻿'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Brain, Send, Loader2, Terminal, Cpu, Wifi, CheckCircle,
-  Image as ImageIcon, X, Search, Code, Zap, Sparkles, Activity, FileText, Shield, Menu
-} from 'lucide-react';
+import { useState, useEffect, useRef, Key } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import '@/styles/dual-theme.css';
 
-// === DASHBOARD COMPONENTS ===
-import PCDashboard from '@/components/PCDashboard';
-import DeepSearchResults from '@/components/DeepSearchResults';
-import WorkerStatus from '@/components/WorkerStatus';
-import TaskHistory from '@/components/TaskHistory';
-import ConstitutionPanel from '@/components/ConstitutionPanel';
+// +++ ADD THIS IMPORT +++
+import { PrimordialUI } from "./components/PrimordialUI";
 
-// === SEARCH RESULTS COMPONENT ===
-const SearchResults = ({ results, answer, sources }: { results?: any[], answer?: string, sources?: any[] }) => {
-  if (answer) {
-    return (
-      <div className="space-y-4">
-        <div className="text-xs font-bold text-purple-400 flex items-center gap-1">
-          <Sparkles className="w-3 h-3" />
-          <span>DEEP SEARCH RESULTS</span>
-        </div>
-        <div className="text-gray-200 whitespace-pre-wrap text-sm leading-relaxed">{answer}</div>
-        {sources && sources.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-2">
-            {sources.map((src, i) => (
-              <a key={i} href={src.url} target="_blank" className="text-[10px] text-cyan-400 hover:underline bg-cyan-950/20 px-2 py-1 rounded-full border border-cyan-800/30">
-                [{i+1}] {src.title?.substring(0, 30)}...
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-  if (!results || results.length === 0) return null;
+// --- TYPES & INTERFACES ---
+interface SystemMetric {
+  name: string;
+  value: number;
+  icon: string;
+  color: string;
+  unit: string;
+}
+
+// ... (rest of your existing code remains exactly the same) ...
+
+export default function SovereignDashboard() {
+  // ... (all your existing state and functions remain exactly the same) ...
+
   return (
-    <div className="space-y-3 mt-2">
-      <div className="text-xs font-bold text-cyan-400">🔍 SEARCH RESULTS ({results.length})</div>
-      <div className="grid gap-2">
-        {results.map((r, i) => (
-          <a key={i} href={r.url} target="_blank" className="block bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg p-3 transition-all">
-            <div className="text-sm font-medium text-white line-clamp-1">{r.title}</div>
-            <div className="text-[10px] text-gray-500 mt-1 truncate">{r.url}</div>
-          </a>
+    <div className="sovereign-root">
+      {/* BUILD MODE PILL */}
+      <div className="build-pill">
+        <span className="build-icon">⧉</span>
+        <span className="build-text">BUILD MODE</span>
+        <span className="build-status">LIVE</span>
+        <span className="build-time">{isMounted ? timestamp : '--:--'}</span>
+      </div>
+
+      {/*SIDE BUTTONS */}
+      <div className="side-nav">
+        {['⌘', '⎇', '⌥', '⚙️'].map(icon => (
+          <button key={icon} className="nav-btn">{icon}</button>
         ))}
       </div>
-    </div>
-  );
-};
 
-export default function SovereignInterface() {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Array<any>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [kernelStatus, setKernelStatus] = useState('checking');
-  const [attachedImage, setAttachedImage] = useState<string | null>(null);
-  const [attachedImagePreview, setAttachedImagePreview] = useState<string | null>(null);
-  
-  // === SIDEBAR STATE ===
-  const [workers, setWorkers] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Fetch Workers on load
-  useEffect(() => {
-    fetch('/api/frontend/workers')
-      .then(res => res.json())
-      .then(data => setWorkers(data.workers || []))
-      .catch(() => console.log("Using default worker data"));
-  }, []);
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages]);
-
-  useEffect(() => {
-    const checkKernel = async () => {
-      try {
-        const res = await fetch('/api/kernel');
-        const data = await res.json();
-        setKernelStatus(data.kernel === 'sovereign' ? 'sovereign' : 'online');
-      } catch { setKernelStatus('offline'); }
-    };
-    checkKernel();
-  }, []);
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf('image') !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setAttachedImage(reader.result as string);
-            setAttachedImagePreview(URL.createObjectURL(file));
-          };
-          reader.readAsDataURL(file);
-          e.preventDefault();
-        }
-        break;
-      }
-    }
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAttachedImage(reader.result as string);
-        setAttachedImagePreview(URL.createObjectURL(file));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setAttachedImage(null);
-    setAttachedImagePreview(null);
-    if(fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleSend = async () => {
-    if (!input.trim() && !attachedImage) return;
-
-    const userMessage = { id: Date.now().toString(), role: 'user', content: input, image: attachedImagePreview };
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Add to History
-    const newHistoryItem = { id: Date.now(), task: input, status: 'running', time: 'Now' };
-    setHistory(prev => [newHistoryItem, ...prev]);
-
-    setInput('');
-    setIsLoading(true);
-    const currentImage = attachedImage;
-    removeImage();
-
-    try {
-      const res = currentImage
-        ? await fetch('/api/workers/vision', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task: input || "Describe this image", image: currentImage.split(',')[1] }) })
-        : await fetch('/api/kernel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ task: input }) });
-
-      const data = await res.json();
-      
-      // Update History status
-      setHistory(prev => prev.map(h => h.id === newHistoryItem.id ? {...h, status: 'completed'} : h));
-
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.code || data.output || data.analysis || data.error || 'Done.',
-        stats: data.stats,
-        results: data.results,
-        answer: data.answer,
-        sources: data.sources
-      }]);
-    } catch (error: any) {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', content: `❌ Crash: ${error.message}` }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="h-screen w-screen bg-black text-white flex overflow-hidden">
-      
-      {/* === SIDEBAR === */}
-      <aside className="w-72 border-r border-white/10 bg-black/90 flex flex-col p-4 gap-6">
-        <div className="flex items-center gap-2 pb-4 border-b border-white/10">
-          <Brain className="w-5 h-5 text-violet-400" />
-          <span className="font-bold text-sm">REZ HIVE</span>
-        </div>
-
-        <div className="flex-1 overflow-hidden space-y-6">
-           <WorkerStatus workers={workers} />
-           <TaskHistory history={history} />
-           <ConstitutionPanel />
-        </div>
-      </aside>
-
-      {/* === MAIN CHAT INTERFACE === */}
-      <div className="flex-1 flex flex-col relative">
-        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/80 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full animate-pulse ${kernelStatus === 'sovereign' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-            <h1 className="text-sm font-medium text-gray-300">REZ INTERFACE</h1>
-            <Badge variant="outline" className="text-[10px] border-white/20 text-gray-500">v2.3 Sovereign</Badge>
+      <div className="content-frame fade-in">
+        {/* TITLE BAR */}
+        <div className="title-bar">
+          <div className="left-group">
+            <div className="window-controls">
+              <div className="dot"></div>
+              <div className="dot"></div>
+              <div className="dot"></div>
+            </div>
+            <span className="title-text">AETHER · KERNEL COMMAND CENTER</span>
           </div>
-          <Badge variant="outline" className={`border-white/10 ${kernelStatus === 'sovereign' ? 'text-emerald-400' : 'text-red-400'}`}>
-            <Wifi className="w-3 h-3 mr-1" /> {kernelStatus === 'sovereign' ? 'Sovereign' : 'Offline'}
-          </Badge>
-        </header>
+          <div className="version-badge">v3.1.2 · Operational</div>
+        </div>
 
-        <main className="flex-1 overflow-hidden pt-14">
-          <ScrollArea className="h-full" ref={scrollRef}>
-            <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-              {messages.length === 0 ? (
-                <div className="h-[70vh] flex flex-col items-center justify-center text-center">
-                  <Brain className="w-10 h-10 text-purple-400 mb-6" />
-                  <h2 className="text-3xl font-light text-gray-200 mb-2">Ready.</h2>
-                  <p className="text-gray-600 text-sm mb-6">Paste (Ctrl+V) a screenshot or type a command:</p>
-                  <div className="flex flex-wrap justify-center gap-2 max-w-xl">
-                    {[
-                      { icon: Search, label: 'Search Web', prompt: 'Search the web for ' },
-                      { icon: ImageIcon, label: 'Analyze Screen', prompt: 'What do you see?' },
-                      { icon: Code, label: 'Write Code', prompt: 'Create a Python script for ' },
-                      { icon: Cpu, label: 'PC Health', prompt: 'Check system health' },
-                      { icon: Sparkles, label: 'Deep Research', prompt: 'Deep search: ' },
-                      { icon: Terminal, label: 'Launch Notepad', prompt: 'Launch notepad' }
-                    ].map((cmd, idx) => (
-                      <button key={idx} onClick={() => setInput(cmd.prompt)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 transition-all text-xs text-gray-300">
-                        <cmd.icon className="w-3 h-3" /> {cmd.label}
-                      </button>
-                    ))}
-                  </div>
+        {/* METRICS ROW */}
+        <div className="metrics-grid">
+          {metrics.map((metric, i) => (
+            <div key={metric.name} className="metric-card glass-morph" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="metric-header">
+                <span className="metric-name">{metric.name}</span>
+                <span className="metric-icon">{metric.icon}</span>
+              </div>
+              <div className="metric-body">
+                <div className="metric-value-group">
+                  {metric.value.toFixed(1)}<span className="metric-unit">{metric.unit}</span>
                 </div>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-purple-600/20 border border-purple-500/30' : 'bg-white/5 border border-white/10'} rounded-2xl p-4`}>
-                      {msg.image && <img src={msg.image} alt="Attached" className="rounded-lg max-h-60 mb-2" />}
-                      {msg.role === 'assistant' ? (
-                        msg.stats ? (
-                          <PCDashboard stats={msg.stats} />
-                        ) : msg.results ? (
-                          <SearchResults results={msg.results} />
-                        ) : msg.answer ? (
-                          <SearchResults answer={msg.answer} sources={msg.sources} />
-                        ) : (
-                          <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">{msg.content}</pre>
-                        )
-                      ) : (
-                        <p className="text-sm text-gray-200">{msg.content}</p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-center gap-2 text-gray-400 bg-white/5 px-4 py-2 rounded-lg">
-                    <Loader2 className="w-4 h-4 animate-spin" /> <span className="text-xs">Thinking...</span>
-                  </div>
+                <div className="progress-track">
+                  <div 
+                    className="progress-fill" 
+                    style={{ width: `${metric.value}%`, background: metric.color }}
+                  ></div>
                 </div>
+              </div>
+              {metric.name === "GPU" && (
+                <div className="gpu-meta">RTX 3060 · {temperature}°C</div>
               )}
             </div>
-          </ScrollArea>
-        </main>
+          ))}
+        </div>
 
-        <footer className="relative z-20 p-6 border-t border-white/10 bg-black/80">
-          <div className="max-w-3xl mx-auto">
-            {attachedImagePreview && (
-              <div className="relative inline-block mb-3">
-                <img src={attachedImagePreview} alt="Preview" className="h-20 rounded-lg border border-white/10" />
-                <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-5 w-5 rounded-full" onClick={removeImage}><X className="w-3 h-3" /></Button>
+        {/* CHAT LOG & INPUT */}
+        <div className="chat-interface glass-morph">
+          <div className="chat-log">
+            {chatLog.map((msg) => (
+              <div key={msg.id} className={`chat-row ${msg.role}`}>
+                <div className="avatar">{msg.role === 'ai' ? '🤖' : 'U'}</div>
+                <div className="message-wrapper">
+                  <div className="message-header">
+                    <span className="sender">{msg.role === 'ai' ? 'Sovereign AI' : 'User'}</span>
+                    <span className="time">{msg.timestamp}</span>
+                  </div>
+                  <div className="message-content prose prose-invert">
+                    {renderMessageContent(msg.content)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="chat-row ai thinking">
+                <div className="avatar animate-pulse">🤖</div>
+                <div className="message-wrapper">
+                  <div className="thinking-dots"><span>.</span><span>.</span><span>.</span></div>
+                </div>
               </div>
             )}
-            <div className="flex gap-4 items-end">
-              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageSelect} className="hidden" />
-              <Button onClick={() => fileInputRef.current?.click()} size="icon" className="bg-transparent hover:bg-white/10 text-gray-400"><ImageIcon className="w-5 h-5" /></Button>
-              <Textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())} onPaste={handlePaste} placeholder="Paste (Ctrl+V) screenshot or type command..." className="flex-1 bg-white/5 border-white/10 text-white min-h-[40px]" rows={1} />
-              <Button onClick={handleSend} size="icon" className="bg-purple-600 hover:bg-purple-700 h-10 w-10" disabled={isLoading}><Send className="w-4 h-4" /></Button>
+            <div ref={chatEndRef} />
+          </div>
+          
+          <div className="input-zone">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && executeAction(input)}
+              placeholder="Ask Sovereign or type command..."
+              className="sovereign-input"
+            />
+            <button className="send-btn" onClick={() => executeAction(input)}>↵</button>
+          </div>
+        </div>
+
+        {/* CATEGORY NAV */}
+        <div className="pill-nav">
+          {Object.keys(SOVEREIGN_COMMANDS).map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveCategory(category as keyof CommandCategories)}
+              className={`pill ${activeCategory === category ? 'active' : ''}`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* COMMAND GRID */}
+        <div className="action-grid">
+          {SOVEREIGN_COMMANDS[activeCategory].map((cmd, i) => (
+            <button
+              key={i}
+              onClick={() => executeAction(cmd.cmd, cmd.payload)}
+              className="action-card"
+            >
+              <div className="card-top">
+                <div className="card-icon-frame">{cmd.icon}</div>
+                <div className="card-desc-group">
+                  <div className="card-label">{cmd.cmd}</div>
+                  <div className="card-desc">{cmd.desc}</div>
+                </div>
+              </div>
+              <div className="card-status">{cmd.value}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* RECENT COMMANDS */}
+        {isMounted && recentCommands.length > 0 && (
+          <div className="recent-container">
+            <h3 className="section-title">RECENT COMMANDS</h3>
+            <div className="recent-list">
+              {recentCommands.map((cmd, i) => (
+                <button
+                  key={i}
+                  onClick={() => executeAction(cmd)}
+                  className="recent-pill"
+                >
+                  {cmd.length > 30 ? cmd.substring(0, 30) + '...' : cmd}
+                </button>
+              ))}
             </div>
           </div>
-        </footer>
+        )}
+
+        {/*STATUS BAR */}
+        <div className="status-footer">
+          <div className="doc-tray">
+            {DOC_ITEMS.map((item, i) => (
+              <span key={i} className="doc-item">
+                <span className="doc-type-icon">{item.split(' ')[0]}</span>
+                <span className="doc-name">{item.split(' ').slice(1).join(' ')}</span>
+              </span>
+            ))}
+          </div>
+          <div className={`temp-badge ${temperature > 65 ? 'high' : ''}`}>
+            🌡️ {isMounted ? temperature : '--'}°C
+          </div>
+        </div>
       </div>
+
+      {/* +++ ADD THE PRIMORDIAL UI COMPONENT HERE +++ */}
+      <PrimordialUI />
+
+      {/* --- PREMIUM STYLESHEET --- */}
+      <style jsx global>{`
+        /* Minimal Tailwind reset/prose override for Premium grade */
+        .prose { max-width: none; font-size: 0.95rem; }
+        .prose p { margin-top: 0; margin-bottom: 0.5rem; }
+        .prose pre { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 8px;}
+        .prose code { color: #82b1ff; background: rgba(130,177,255,0.1); padding: 2px 4px; border-radius: 4px;}
+        .prose strong { color: #fff; font-weight: 600;}
+      `}</style>
+      <style jsx>{`
+        /* Color Palette & Vars */
+        :react {
+          --bg-dark: #020203;
+          --panel-bg: rgba(10, 12, 16, 0.65);
+          --card-bg: rgba(18, 21, 27, 0.6);
+          --accent: #5a9eff;
+          --border: rgba(255, 255, 255, 0.04);
+          --border-bright: rgba(255, 255, 255, 0.08);
+          --text-muted: rgba(255, 255, 255, 0.4);
+          --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        .sovereign-root {
+          background: #000;
+          background-image: radial-gradient(at 50% 100%, #06080c 0%, #000 100%);
+          min-height: 100vh;
+          color: #fff;
+          font-family: 'SF Pro Display', -apple-system, Inter, sans-serif;
+          padding: 6vh 2vw;
+          position: relative;
+          overflow-x: hidden;
+        }
+
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .content-frame {
+          max-width: 1300px;
+          margin: 0 auto;
+          background: var(--panel-bg);
+          backdrop-filter: blur(40px) saturate(180%);
+          border: 1px solid var(--border-bright);
+          border-radius: 40px;
+          padding: 40px;
+          box-shadow: var(--shadow-premium);
+        }
+
+        .glass-morph {
+          background: rgba(255, 255, 255, 0.01);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          box-shadow: inset 0 1px 1px rgba(255,255,255,0.01);
+          transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .build-pill {
+          position: fixed;
+          top: 24px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(8, 10, 13, 0.95);
+          border: 1px solid rgba(255, 215, 100, 0.3);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          border-radius: 100px;
+          padding: 10px 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          z-index: 1000;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.5px;
+        }
+
+        .build-icon { color: #ffd764; font-size: 14px; }
+        .build-status {
+          background: rgba(255, 215, 100, 0.1);
+          color: #ffd764;
+          padding: 2px 8px;
+          border-radius: 4px;
+          position: relative;
+          padding-left: 18px;
+        }
+        .build-status::before {
+          content: '';
+          position: absolute;
+          left: 6px; top: 50%;
+          transform: translateY(-50%);
+          width: 6px; height: 6px;
+          background: #ffd764;
+          border-radius: 50%;
+          animation: pulseGreen 2s infinite;
+        }
+        .build-time { color: var(--text-muted); }
+
+        @keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 100, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(255, 215, 100, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 100, 0); } }
+
+        .side-nav {
+          position: fixed;
+          left: 30px;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          z-index: 100;
+        }
+
+        .nav-btn {
+          width: 48px;
+          height: 48px;
+          background: rgba(20, 24, 31, 0.8);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          color: rgba(255,255,255,0.25);
+          font-size: 20px;
+          cursor: pointer;
+          transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .nav-btn:hover {
+          background: rgba(35, 41, 51, 0.95);
+          border-color: var(--border-bright);
+          color: var(--accent);
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .title-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 30px;
+          color: rgba(255,255,255,0.3);
+          font-size: 12px;
+          letter-spacing: 0.5px;
+          font-weight: 500;
+        }
+
+        .left-group { display: flex; gap: 16px; align-items: center; }
+        .window-controls { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.02); }
+
+        .version-badge {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.05);
+          padding: 4px 12px;
+          border-radius: 6px;
+          color: rgba(255,255,255,0.5);
+        }
+
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+
+        @keyframes metricEntry { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .metric-card {
+          border-radius: 24px;
+          padding: 24px;
+          animation: metricEntry 0.5s ease-out both;
+        }
+        .metric-card:hover {
+          border-color: rgba(255, 255, 255, 0.08);
+          box-shadow: inset 0 1px 1px rgba(255,255,255,0.03), 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .metric-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 16px;
+          color: var(--text-muted);
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 1px;
+        }
+
+        .metric-value-group {
+          font-size: 42px;
+          font-weight: 700;
+          letter-spacing: -1px;
+          margin-bottom: 12px;
+          color: #fff;
+        }
+
+        .metric-unit { font-size: 16px; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+
+        .progress-track {
+          height: 6px;
+          background: rgba(255,255,255,0.04);
+          border-radius: 3px;
+          overflow: hidden;
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 3px;
+          transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .gpu-meta {
+          font-size: 11px;
+          color: rgba(255,255,255,0.3);
+          margin-top: 10px;
+          background: rgba(0,0,0,0.2);
+          padding: 4px 8px;
+          border-radius: 4px;
+          display: inline-block;
+        }
+
+        .chat-interface {
+          border-radius: 24px;
+          margin-bottom: 24px;
+          height: 40vh;
+          min-height: 350px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
+        .chat-log {
+          flex: 1;
+          padding: 24px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          scroll-behavior: smooth;
+        }
+
+        .chat-log::-webkit-scrollbar { width: 6px; }
+        .chat-log::-webkit-scrollbar-track { background: transparent; }
+        .chat-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 3px; }
+        .chat-log::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+
+        .chat-row {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+          max-width: 85%;
+        }
+        
+        .chat-row.user {
+          align-self: flex-end;
+          flex-direction: row-reverse;
+          text-align: right;
+        }
+
+        .chat-row.user .message-header { flex-direction: row-reverse; }
+
+        .avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+        
+        .ai .avatar { background: rgba(90, 158, 255, 0.1); border: 1px solid rgba(90, 158, 255, 0.2); color: var(--accent); }
+        .user .avatar { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
+
+        .message-content {
+          background: var(--card-bg);
+          border: 1px solid rgba(255,255,255,0.03);
+          border-radius: 14px;
+          padding: 12px 16px;
+        }
+        
+        .ai .message-content { border-top-left-radius: 2px; }
+        .user .message-content { border-top-right-radius: 2px; background: rgba(30, 40, 55, 0.5); }
+
+        .message-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+          font-size: 11px;
+        }
+        
+        .sender { color: rgba(255,255,255,0.5); font-weight: 500; }
+        .time { color: rgba(255,255,255,0.2); }
+
+        .thinking-dots {
+          display: flex; gap: 4px; font-size: 1.5rem; color: var(--accent); line-height: 0; padding: 10px;
+        }
+        .thinking-dots span { animation: thinkDot 1.4s infinite; opacity: 0; }
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes thinkDot { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+        .input-zone {
+          border-top: 1px solid rgba(255,255,255,0.03);
+          padding: 16px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(0,0,0,0.1);
+        }
+
+        .sovereign-input {
+          flex: 1;
+          background: rgba(0,0,0,0.2);
+          border: 1px solid var(--border);
+          color: #fff;
+          border-radius: 12px;
+          padding: 12px 16px;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.3s;
+        }
+        
+        .sovereign-input:focus { border-color: rgba(90, 158, 255, 0.4); background: rgba(0,0,0,0.3); }
+
+        .send-btn {
+          background: rgba(90, 158, 255, 0.1);
+          color: var(--accent);
+          border: 1px solid rgba(90, 158, 255, 0.3);
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          font-size: 18px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+        .send-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .pill-nav {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+
+        .pill {
+          background: transparent;
+          border: 1px solid var(--border);
+          color: rgba(255,255,255,0.4);
+          padding: 8px 18px;
+          border-radius: 8px;
+          font-size: 13px;
+          cursor: pointer;
+          text-transform: capitalize;
+          transition: 0.2s;
+          font-weight: 500;
+        }
+
+        .pill:hover { background: rgba(255,255,255,0.03); border-color: var(--border-bright); color: #fff; }
+        .pill.active { background: rgba(90, 158, 255, 0.08); border-color: rgba(90, 158, 255, 0.3); color: var(--accent); }
+
+        .action-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 16px;
+          margin-bottom: 30px;
+        }
+
+        .action-card {
+          background: var(--card-bg);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 16px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+          text-align: left;
+        }
+
+        .action-card:hover {
+          border-color: rgba(255,255,255,0.1);
+          background: rgba(28, 33, 40, 0.8);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .card-top { display: flex; align-items: center; gap: 14px; }
+        .card-icon-frame {
+          width: 40px; height: 40px;
+          background: rgba(0,0,0,0.2);
+          border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px;
+        }
+        
+        .action-card:hover .card-icon-frame { background: rgba(0,0,0,0.3); }
+
+        .card-label { font-size: 14px; font-weight: 500; color: #fff; margin-bottom: 2px; }
+        .card-desc { font-size: 11px; color: var(--text-muted); }
+        .card-status { font-size: 11px; color: var(--accent); background: rgba(90, 158, 255, 0.08); padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+
+        .recent-container { margin-bottom: 30px; }
+        .section-title { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; letter-spacing: 1.5px; font-weight: 600; }
+        .recent-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        
+        .recent-pill {
+          background: transparent;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-size: 12px;
+          color: rgba(255,255,255,0.6);
+          cursor: pointer;
+          transition: 0.2s;
+        }
+        .recent-pill:hover {
+          border-color: var(--border-bright);
+          color: #fff;
+          background: rgba(255,255,255,0.02);
+        }
+
+        .status-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 40px;
+          padding-top: 24px;
+          border-top: 1px solid var(--border);
+          color: rgba(255,255,255,0.25);
+          font-size: 12px;
+        }
+
+        .doc-tray { display: flex; gap: 20px; flex-wrap: wrap; }
+        .doc-item { display: flex; align-items: center; gap: 8px; transition: color 0.2s; cursor: pointer;}
+        .doc-item:hover { color: rgba(255,255,255,0.6); }
+        .doc-type-icon { opacity: 0.4; font-size: 14px;}
+        .doc-name { font-weight: 400; }
+
+        .temp-badge {
+          background: rgba(255,90,30,0.06);
+          border: 1px solid rgba(255,90,30,0.15);
+          border-radius: 100px;
+          padding: 6px 16px;
+          color: #ffaa7a;
+          font-weight: 500;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+        }
+        
+        .temp-badge.high {
+          background: rgba(255,30,30,0.1);
+          border-color: rgba(255,30,30,0.3);
+          color: #ff7a7a;
+          animation: pulseRed 2s infinite;
+        }
+        
+        @keyframes pulseRed { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,122,122, 0.2); } 50% { box-shadow: 0 0 0 6px rgba(255,122,122, 0); } }
+      `}</style>
     </div>
   );
 }
+

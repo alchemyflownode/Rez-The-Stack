@@ -1,12 +1,13 @@
 ﻿import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "./globals.css";
 import "@/styles/dual-theme.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sovereign AI",
-  description: "Builder Mode • Flow Mode",
+  title: "REZ HIVE Sovereign",
+  description: "Builder Mode • Flow Mode • Sovereign AI",
 };
 
 export default function RootLayout({
@@ -20,3 +21,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -1,0 +1,144 @@
+async function queenDecide(task: string) {
+  const prompt = `
+Task: "${task}"
+
+Which worker should handle this task? Choose based on the task type:
+
+- code: Use for programming, scripts, algorithms, code generation, calculations
+- app: Use ONLY for launching/closing applications (notepad, calc, chrome, etc.)
+- file: Use for reading/writing files, listing directories, file operations
+- rezstack: Use for RezStack-specific operations (file tree, recovery)
+- mcp: Use for web search, browser automation, AI image generation
+
+Examples:
+- "Write a Python script" → code
+- "Launch notepad" → app
+- "List files" → file
+- "Search the web" → mcp
+- "Show file tree" → rezstack
+
+Return JSON: { "worker": "code|app|file|rezstack|mcp", "reason": "brief explanation" }
+`;
+  const text = await callOllama(prompt);
+  try { 
+    const match = text.match(/\{[\s\S]*\}/);
+    return match ? JSON.parse(match[0]) : { worker: 'code', reason: 'fallback' };
+  } catch { 
+    return { worker: 'code', reason: 'fallback' };
+  }
+}
+// POST handler - Run chain (non-streaming)
+export async function POST(request: NextRequest) {
+  try {
+    const { task, maxIterations = 10 } = await request.json();
+    
+    if (!task) {
+      return NextResponse.json({ error: 'Task required' }, { status: 400 });
+    }
+
+    // Check Ollama
+    try {
+      await fetch('http://localhost:11434/api/tags');
+    } catch {
+      return NextResponse.json({ error: 'Ollama not running' }, { status: 503 });
+    }
+
+    // Let queen decide which worker to use
+    const decision = await queenDecide(task);
+    const workerUrl = workers[decision.worker as keyof typeof workers];
+    
+    if (!workerUrl) {
+      return NextResponse.json({ error: 'Invalid worker selection' }, { status: 400 });
+    }
+
+    // Call the selected worker
+    const workerResponse = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task })
+    });
+    
+    const workerResult = await workerResponse.json();
+    
+    return NextResponse.json({ 
+      success: true,
+      queenDecision: decision,
+      workerResult 
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// GET handler - Fetch patterns
+export async function GET() {
+  try {
+    const patterns = await db.pattern.findMany({
+      orderBy: { confidence: 'desc' },
+      take: 20
+    });
+    
+    return NextResponse.json({
+      success: true,
+      patterns: patterns.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        confidence: p.confidence || 0
+      }))
+    });
+  } catch (error) {
+    return NextResponse.json({ success: false, patterns: [] });
+  }
+}
+
+// PUT handler - Stream chain (real-time)
+export async function PUT(request: NextRequest) {
+  try {
+    const { task, maxIterations = 10 } = await request.json();
+    
+    if (!task) {
+      return NextResponse.json({ error: 'Task required' }, { status: 400 });
+    }
+
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendProgress = (state: ChainState) => {
+          const data = JSON.stringify({
+            type: 'progress',
+            iteration: state.iteration,
+            layer: state.currentLayer,
+            confidence: state.confidence,
+            latestThought: state.history[state.history.length - 1]?.thought.substring(0, 500)
+          });
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        };
+
+        try {
+          const finalState = await runChainingLoop(task, maxIterations, sendProgress);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+            type: 'complete',
+            result: finalState
+          })}\n\n`));
+        } catch (error: any) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+            type: 'error',
+            error: error.message
+          })}\n\n`));
+        }
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

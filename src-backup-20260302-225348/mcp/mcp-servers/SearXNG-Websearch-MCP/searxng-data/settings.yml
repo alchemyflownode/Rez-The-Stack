@@ -1,0 +1,21 @@
+﻿# SearXNG settings
+use_default_settings: true
+server:
+  secret_key: "rezstack_secret_key_change_me"
+  limiter: false
+  public_instance: false
+  port: 8080
+  bind_address: "0.0.0.0"
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json
+engines:
+  - name: google
+    use_mobile_ui: false
+    timeout: 3.0
+    disabled: false
+  - name: duckduckgo
+    timeout: 3.0
+    disabled: false
