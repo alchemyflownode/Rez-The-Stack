@@ -1,57 +1,100 @@
 ﻿import { NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const API_BASE_URL = process.env.API_URL || 'http://localhost:8001';
+
+/**
+ * REZ HIVE Kernel API Proxy
+ * Streams responses from FastAPI backend to support real-time AI responses
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { task, worker, ...payload } = body;
     
-    console.log(`🧠 Processing: "${task}"`);
-    console.log(`→ Routing to ${worker || 'default'} worker`);
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let response = '';
-    
-    if (task.toLowerCase().includes('cpu')) {
-      const cpuUsage = (20 + Math.random() * 30).toFixed(1);
-      response = `**CPU Analysis Complete**\n\nCurrent CPU usage is **${cpuUsage}%** across 8 cores.`;
-    } 
-    else if (task.toLowerCase().includes('ram') || task.toLowerCase().includes('memory')) {
-      const ramUsage = (40 + Math.random() * 20).toFixed(1);
-      response = `**Memory Analysis Complete**\n\nRAM usage is **${ramUsage}%** (32GB total).`;
-    }
-    else if (task.toLowerCase().includes('gpu')) {
-      const gpuTemp = (45 + Math.random() * 15).toFixed(0);
-      response = `**GPU Status**\n\nRTX 3060 temperature: **${gpuTemp}°C**\nGPU load: **${(15 + Math.random() * 30).toFixed(1)}%**`;
-    }
-    else if (task.toLowerCase().includes('health')) {
-      response = `**System Health Check**\n\n✅ All systems operational\n✅ Memory: 32GB available\n✅ GPU: RTX 3060 active\n✅ Storage: 1TB NVMe (62% used)`;
-    }
-    else {
-      response = `**Command Executed**\n\n\`${task}\` processed successfully.\n\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\``;
-    }
-    
-    return NextResponse.json({ 
-      content: response,
-      status: 'success',
-      worker: worker || 'brain',
-      timestamp: new Date().toISOString()
+    // Forward to Python FastAPI backend
+    const response = await fetch(`${API_BASE_URL}/api/kernel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend error: ${response.status} - ${errorText}`);
+    }
+
+    // Stream the response back to client
+    const reader = response.body?.getReader();
     
-  } catch (error) {
-    console.error('Kernel API Error:', error);
+    if (!reader) {
+      throw new Error('No response body from backend');
+    }
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          controller.error(error);
+        } finally {
+          controller.close();
+          reader.releaseLock();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+
+  } catch (error: any) {
+    console.error('[Kernel API Error]:', error);
     
     return NextResponse.json(
       { 
-        error: 'Kernel processing failed',
-        content: `**⚠️ Kernel Error**\n\nFailed to process request.\n\`\`\`\n${error}\n\`\`\``,
-        status: 'error'
+        content: `⚠️ System Error: ${error.message}. Is the backend running?`,
+        status: 'error',
+        error: error.message 
       },
       { status: 500 }
     );
   }
 }
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { status: 200 });
+// Health check endpoint
+export async function GET() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return NextResponse.json({ 
+        status: 'online',
+        backend: 'connected',
+        ...data
+      });
+    }
+    
+    throw new Error('Backend not responding');
+  } catch (error) {
+    return NextResponse.json({ 
+      status: 'degraded',
+      backend: 'disconnected',
+      message: 'FastAPI backend is not running'
+    }, { status: 503 });
+  }
 }

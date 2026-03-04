@@ -44,9 +44,9 @@ export const TwoBarMeter: React.FC<TwoBarMeterProps> = ({
           />
         </div>
       </div>
-      <div className="flex justify-between text-[10px] text-white/30 font-mono pt-1 border-t border-white/5">
+      <div suppressHydrationWarning className="flex justify-between text-[10px] text-white/30 font-mono pt-1 border-t border-white/5">
         <span>RESET</span>
-        <span>{formatResetTime(resetTime)}</span>
+        <span suppressHydrationWarning>{formatResetTime(resetTime)}</span>
       </div>
     </div>
   );
