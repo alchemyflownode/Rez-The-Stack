@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     // If we have a file path, use JetBrains for intelligent operations
     if (file) {
       // Open in IDE for human review
-      await fetch('http://localhost:3001/api/jetbrains', {
+      await fetch('/api/jetbrains', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Otherwise use AI for generation
-    const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+    const ollamaRes = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

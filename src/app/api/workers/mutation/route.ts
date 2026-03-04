@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     // If we have a file, use JetBrains for safe refactoring
     if (file) {
       // First, let JetBrains analyze the code
-      const analysis = await fetch('http://localhost:3001/api/jetbrains', {
+      const analysis = await fetch('/api/jetbrains', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       });
       
       // Then open for manual refactoring if needed
-      await fetch('http://localhost:3001/api/jetbrains', {
+      await fetch('/api/jetbrains', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

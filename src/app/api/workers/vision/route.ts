@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 
-const OLLAMA_URL = 'http://localhost:11434/api/generate';
+const OLLAMA_URL = '/api/generate';
 
 // Try multiple vision model names
 const VISION_MODELS = ['llava:7b', 'llava', 'llava:v1.6', 'llama3.2-vision:11b', 'moondream'];

@@ -1,0 +1,1 @@
+# (paste the ASCII-safe script above here)

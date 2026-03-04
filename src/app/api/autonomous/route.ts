@@ -28,7 +28,7 @@ Output a JSON array of skill IDs to execute in order.
 Example: ["check_hardware", "search_web"]
 `;
 
-    const ollama = await fetch('http://localhost:11434/api/generate', {
+    const ollama = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'llama3.2:3b', prompt: planPrompt, stream: false })
