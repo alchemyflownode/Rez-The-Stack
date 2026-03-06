@@ -1,12 +1,13 @@
 @echo off
-title REZ HIVE COMPLETE LAUNCHER 🏛️
+title REZ HIVE COMPLETE LAUNCHER
 color 0A
 
 set "PROJECT_PATH=D:\okiru-os\The Reztack OS"
 set "PYTHON_PATH=python"
 set "CHROMA_PORT=8000"
 set "API_PORT=8001"
-set "FRONTEND_PORT=3000"
+set "FRONTEND_PORT=3001"
+set "FRONTEND_PORT_ALT=3000"
 set "SEARXNG_PORT=8080"
 set "WSL_DISTRO=Ubuntu"
 set "LOGS_PATH=%PROJECT_PATH%\logs"
@@ -16,79 +17,139 @@ if not exist "%LOGS_PATH%" mkdir "%LOGS_PATH%"
 
 :menu
 cls
+echo ===================================================
+echo     REZ HIVE - COMPLETE LAUNCHER (ALL SERVICES)
+echo ===================================================
 echo.
-echo  ╔═══════════════════════════════════════════════════════════════╗
-echo  ║    🏛️ REZ HIVE - COMPLETE LAUNCHER (ALL SERVICES)            ║
-echo  ╚═══════════════════════════════════════════════════════════════╝
-echo.
-echo  [1] LAUNCH EVERYTHING (ChromaDB + FastAPI + Next.js + SearXNG + MCP)
-echo  [2] LAUNCH BASIC STACK (ChromaDB + FastAPI + Next.js only)
-echo  [3] LAUNCH CHROMADB ONLY
-echo  [4] LAUNCH FASTAPI ONLY
-echo  [5] LAUNCH NEXT.JS ONLY
-echo  [6] LAUNCH SEARXNG ONLY
-echo  [7] LAUNCH MCP SERVERS ONLY
-echo  [8] CHECK STATUS (ALL SERVICES)
-echo  [9] STOP ALL SERVICES
-echo  [10] LIST AVAILABLE MODELS
+echo  [1] LAUNCH EVERYTHING (Port 3001 - DEFAULT)
+echo  [2] LAUNCH EVERYTHING (Port 3000 - Alternate)
+echo  [3] LAUNCH BASIC STACK (Port 3001)
+echo  [4] LAUNCH BASIC STACK (Port 3000)
+echo  [5] LAUNCH CHROMADB ONLY
+echo  [6] LAUNCH FASTAPI ONLY
+echo  [7] LAUNCH NEXT.JS ONLY (Port 3001)
+echo  [8] LAUNCH NEXT.JS ONLY (Port 3000)
+echo  [9] LAUNCH SEARXNG ONLY
+echo  [10] LAUNCH MCP SERVERS ONLY
+echo  [11] CHECK STATUS (ALL SERVICES)
+echo  [12] STOP ALL SERVICES
+echo  [13] LIST AVAILABLE MODELS
+echo  [14] VIEW LIVE LOGS
+echo  [15] KILL STUCK PROCESSES ON PORT 8001
 echo  [0] EXIT
 echo.
-set /p choice=Select option [0-10]: 
+set /p choice=Select option [0-15]: 
 
-if "%choice%"=="1" goto launch_everything
-if "%choice%"=="2" goto launch_basic
-if "%choice%"=="3" goto launch_chroma
-if "%choice%"=="4" goto launch_fastapi
-if "%choice%"=="5" goto launch_nextjs
-if "%choice%"=="6" goto launch_searxng
-if "%choice%"=="7" goto launch_mcp
-if "%choice%"=="8" goto status
-if "%choice%"=="9" goto kill
-if "%choice%"=="10" goto list_models
+if "%choice%"=="1" goto launch_everything_3001
+if "%choice%"=="2" goto launch_everything_3000
+if "%choice%"=="3" goto launch_basic_3001
+if "%choice%"=="4" goto launch_basic_3000
+if "%choice%"=="5" goto launch_chroma
+if "%choice%"=="6" goto launch_fastapi
+if "%choice%"=="7" goto launch_nextjs_3001
+if "%choice%"=="8" goto launch_nextjs_3000
+if "%choice%"=="9" goto launch_searxng
+if "%choice%"=="10" goto launch_mcp
+if "%choice%"=="11" goto status
+if "%choice%"=="12" goto kill
+if "%choice%"=="13" goto list_models
+if "%choice%"=="14" goto view_logs
+if "%choice%"=="15" goto kill_port_8001
 if "%choice%"=="0" exit /b 0
+goto menu
+
+:launch_everything_3001
+set "FRONTEND_PORT=3001"
+goto launch_everything
+
+:launch_everything_3000
+set "FRONTEND_PORT=3000"
+goto launch_everything
+
+:launch_basic_3001
+set "FRONTEND_PORT=3001"
+goto launch_basic
+
+:launch_basic_3000
+set "FRONTEND_PORT=3000"
+goto launch_basic
+
+:launch_nextjs_3001
+set "FRONTEND_PORT=3001"
+goto launch_nextjs
+
+:launch_nextjs_3000
+set "FRONTEND_PORT=3000"
+goto launch_nextjs
+
+:kill_port_8001
+cls
+echo ===================================================
+echo   KILLING PROCESSES ON PORT 8001
+echo ===================================================
+echo.
+echo Finding processes using port 8001...
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8001 ^| findstr LISTENING') do (
+    echo Killing PID: %%a
+    taskkill /F /PID %%a >nul 2>&1
+)
+timeout /t 2 /nobreak >nul
+echo.
+echo [OK] Port 8001 should now be free
+pause
 goto menu
 
 :launch_everything
 cls
-echo 🚀 Launching EVERYTHING - Full Sovereign Stack...
+echo ===================================================
+echo LAUNCHING EVERYTHING - VISIBLE OUTPUT (Port %FRONTEND_PORT%)
+echo ===================================================
 echo.
 
-:: Kill existing processes
+:: Kill existing processes MORE AGGRESSIVELY
 echo [1/6] Cleaning up existing processes...
+
+:: First try normal kill
 taskkill /F /IM python.exe >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
 wsl -d %WSL_DISTRO% -e bash -c "pkill -f mcp_servers" >nul 2>&1
 docker stop searxng >nul 2>&1
-timeout /t 2 /nobreak >nul
-echo   ✅ Cleanup complete
-echo.
 
-:: 1. ChromaDB
-echo [2/6] Starting ChromaDB Memory...
-if not exist "%PROJECT_PATH%\chroma_data" mkdir "%PROJECT_PATH%\chroma_data"
-start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && chroma run --path ./chroma_data --port %CHROMA_PORT% >> "%LOGS_PATH%\chroma.log" 2>&1"
+:: Then specifically kill anything on port 8001
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8001 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
+
 timeout /t 3 /nobreak >nul
-echo   ✅ ChromaDB starting
+echo   [OK] Cleanup complete
 echo.
 
-:: 2. FastAPI
-echo [3/6] Starting FastAPI Backend...
+:: 1. ChromaDB - VISIBLE output
+echo [2/6] Starting ChromaDB Memory (visible window)...
+if not exist "%PROJECT_PATH%\chroma_data" mkdir "%PROJECT_PATH%\chroma_data"
+start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && echo [CHROMADB] Running on port %CHROMA_PORT% && echo. && chroma run --path ./chroma_data --port %CHROMA_PORT%"
+timeout /t 3 /nobreak >nul
+echo   [OK] ChromaDB window opened
+echo.
+
+:: 2. FastAPI - VISIBLE output
+echo [3/6] Starting FastAPI Backend (visible window)...
 if exist "%PROJECT_PATH%\backend\kernel.py" (
-    start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && python backend\kernel.py >> "%LOGS_PATH%\fastapi.log" 2>&1"
-    echo   ✅ FastAPI starting
+    start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && echo [FASTAPI] Starting on port %API_PORT% && echo. && python backend\kernel.py"
+    echo   [OK] FastAPI window opened
 ) else (
-    echo   ⚠️ kernel.py not found - skipping
+    echo   [WARN] kernel.py not found - skipping
 )
 timeout /t 3 /nobreak >nul
 echo.
 
-:: 3. Next.js
-echo [4/6] Starting Next.js Frontend...
+:: 3. Next.js - VISIBLE output on selected port
+echo [4/6] Starting Next.js Frontend on port %FRONTEND_PORT% (visible window)...
 if exist "%PROJECT_PATH%\package.json" (
-    start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && npm run dev >> "%LOGS_PATH%\frontend.log" 2>&1"
-    echo   ✅ Next.js starting
+    start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && echo [NEXT.JS] Starting on port %FRONTEND_PORT% && echo. && npm run dev -- -p %FRONTEND_PORT%"
+    echo   [OK] Next.js window opened on port %FRONTEND_PORT%
 ) else (
-    echo   ⚠️ package.json not found - skipping
+    echo   [WARN] package.json not found - skipping
 )
 timeout /t 3 /nobreak >nul
 echo.
@@ -97,14 +158,14 @@ echo.
 echo [5/6] Starting SearXNG Web Search...
 docker start searxng >nul 2>&1
 if %errorlevel%==0 (
-    echo   ✅ SearXNG started (existing container)
+    echo   [OK] SearXNG started (existing container)
 ) else (
     echo   Creating new SearXNG container...
     docker run -d --name searxng -p %SEARXNG_PORT%:8080 searxng/searxng:latest >nul 2>&1
     if %errorlevel%==0 (
-        echo   ✅ SearXNG created and started
+        echo   [OK] SearXNG created and started
     ) else (
-        echo   ⚠️ SearXNG failed - Is Docker Desktop running with WSL2?
+        echo   [WARN] SearXNG failed - Is Docker Desktop running?
     )
 )
 echo.
@@ -115,76 +176,99 @@ if exist "%PROJECT_PATH%\mcp_servers" (
     echo   Killing old MCP processes...
     wsl -d %WSL_DISTRO% -e bash -c "pkill -f mcp_servers" >nul 2>&1
     
-    echo   Starting executive_mcp.py...
-    start "MCP-Executive" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/executive_mcp.py >> /mnt/d/okiru-os/The\ Reztack\ OS/logs/mcp_exec.log 2>&1"
+    echo   Starting executive_mcp.py (visible)...
+    start "MCP-Executive" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-EXEC] Starting...' && python3 mcp_servers/executive_mcp.py"
     timeout /t 1 /nobreak >nul
     
-    echo   Starting system_mcp.py...
-    start "MCP-System" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/system_mcp.py >> /mnt/d/okiru-os/The\ Reztack\ OS/logs/mcp_system.log 2>&1"
+    echo   Starting system_mcp.py (visible)...
+    start "MCP-System" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-SYS] Starting...' && python3 mcp_servers/system_mcp.py"
     timeout /t 1 /nobreak >nul
     
-    echo   Starting process_mcp.py...
-    start "MCP-Process" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/process_mcp.py >> /mnt/d/okiru-os/The\ Reztack\ OS/logs/mcp_process.log 2>&1"
+    echo   Starting process_mcp.py (visible)...
+    start "MCP-Process" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-PROC] Starting...' && python3 mcp_servers/process_mcp.py"
     timeout /t 1 /nobreak >nul
     
-    echo   Starting research_mcp.py...
-    start "MCP-Research" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/research_mcp.py >> /mnt/d/okiru-os/The\ Reztack\ OS/logs/mcp_research.log 2>&1"
+    echo   Starting research_mcp.py (visible)...
+    start "MCP-Research" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-RESEARCH] Starting...' && python3 mcp_servers/research_mcp.py"
     timeout /t 1 /nobreak >nul
     
-    echo   Starting rag_pipeline.py...
-    start "MCP-RAG" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/rag_pipeline.py >> /mnt/d/okiru-os/The\ Reztack\ OS/logs/mcp_rag.log 2>&1"
+    echo   Starting rag_pipeline.py (visible)...
+    start "MCP-RAG" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-RAG] Starting...' && python3 mcp_servers/rag_pipeline.py"
     
-    echo   ✅ All MCP servers started
+    echo   [OK] All MCP servers started - Check their windows
 ) else (
-    echo   ⚠️ MCP servers directory not found
+    echo   [WARN] MCP servers directory not found
 )
 echo.
 
-echo ========================================
-echo ✅ EVERYTHING LAUNCHED!
-echo ========================================
+echo ===================================================
+echo EVERYTHING LAUNCHED on port %FRONTEND_PORT%!
+echo ===================================================
 echo.
-echo 📍 Frontend:    http://localhost:%FRONTEND_PORT%
-echo 📍 Backend API: http://localhost:%API_PORT%
-echo 📍 API Docs:    http://localhost:%API_PORT%/docs
-echo 📍 ChromaDB:    http://localhost:%CHROMA_PORT%
-echo 📍 SearXNG:     http://localhost:%SEARXNG_PORT%
+echo LOOK FOR THESE WINDOWS:
+echo - ChromaDB (port 8000)
+echo - FastAPI (port 8001)
+echo - Next.js (port %FRONTEND_PORT%)
+echo - MCP-Executive, MCP-System, MCP-Process, etc.
 echo.
-echo 📁 Logs: %LOGS_PATH%
+echo Frontend:    http://localhost:%FRONTEND_PORT%
+echo Backend API: http://localhost:%API_PORT%
+echo SearXNG:     http://localhost:%SEARXNG_PORT%
 echo.
-echo 🎮 Model toggle in UI header next to Memory indicator
+echo Logs also saved to: %LOGS_PATH%
+echo.
+echo Model toggle in UI header next to Memory indicator
 echo.
 pause
 goto menu
 
 :launch_basic
 cls
-echo 🚀 Launching BASIC Stack (ChromaDB + FastAPI + Next.js)...
+echo ===================================================
+echo LAUNCHING BASIC STACK - VISIBLE OUTPUT (Port %FRONTEND_PORT%)
+echo ===================================================
 echo.
 
 :: Kill existing processes
 taskkill /F /IM python.exe >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
-timeout /t 2 /nobreak >nul
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8001 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
+timeout /t 3 /nobreak >nul
 
-:: ChromaDB
-echo [1/3] Starting ChromaDB Memory...
+:: ChromaDB - VISIBLE
+echo [1/3] Starting ChromaDB Memory (visible)...
 if not exist "%PROJECT_PATH%\chroma_data" mkdir "%PROJECT_PATH%\chroma_data"
-start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && chroma run --path ./chroma_data --port %CHROMA_PORT%"
+start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && echo [CHROMADB] Running on port %CHROMA_PORT% && echo. && chroma run --path ./chroma_data --port %CHROMA_PORT%"
 timeout /t 3 /nobreak >nul
 
-:: FastAPI
-echo [2/3] Starting FastAPI Backend...
-start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && python backend\kernel.py"
+:: FastAPI - VISIBLE
+echo [2/3] Starting FastAPI Backend (visible)...
+start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && echo [FASTAPI] Starting on port %API_PORT% && echo. && python backend\kernel.py"
 timeout /t 3 /nobreak >nul
 
-:: Next.js
-echo [3/3] Starting Next.js Frontend...
-start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && npm run dev"
+:: Next.js - VISIBLE on selected port
+echo [3/3] Starting Next.js Frontend on port %FRONTEND_PORT% (visible)...
+start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && echo [NEXT.JS] Starting on port %FRONTEND_PORT% && echo. && npm run dev -- -p %FRONTEND_PORT%"
 
 echo.
-echo ✅ BASIC STACK LAUNCHED
-echo 📍 Frontend: http://localhost:%FRONTEND_PORT%
+echo BASIC STACK LAUNCHED on port %FRONTEND_PORT% - Check the windows!
+echo Frontend: http://localhost:%FRONTEND_PORT%
+pause
+goto menu
+
+:launch_nextjs
+cls
+echo Starting Next.js Frontend on port %FRONTEND_PORT%...
+if not exist "%PROJECT_PATH%\package.json" (
+    echo ERROR: package.json not found
+    pause
+    goto menu
+)
+start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && echo [NEXT.JS] Starting on port %FRONTEND_PORT% && echo. && npm run dev -- -p %FRONTEND_PORT%"
+echo Next.js window opened on port %FRONTEND_PORT% - Check it for output
+echo Frontend: http://localhost:%FRONTEND_PORT%
 pause
 goto menu
 
@@ -192,8 +276,8 @@ goto menu
 cls
 echo Starting ChromaDB Memory Server...
 if not exist "%PROJECT_PATH%\chroma_data" mkdir "%PROJECT_PATH%\chroma_data"
-start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && chroma run --path ./chroma_data --port %CHROMA_PORT%"
-echo ChromaDB running at http://localhost:%CHROMA_PORT%
+start "ChromaDB" cmd /k "cd /d "%PROJECT_PATH%" && echo [CHROMADB] Running on port %CHROMA_PORT% && echo. && chroma run --path ./chroma_data --port %CHROMA_PORT%"
+echo ChromaDB window opened - Check it for output
 pause
 goto menu
 
@@ -205,21 +289,26 @@ if not exist "%PROJECT_PATH%\backend\kernel.py" (
     pause
     goto menu
 )
-start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && python backend\kernel.py"
-echo FastAPI running at http://localhost:%API_PORT%
+start "FastAPI" cmd /k "cd /d "%PROJECT_PATH%" && echo [FASTAPI] Starting on port %API_PORT% && echo. && python backend\kernel.py"
+echo FastAPI window opened - Check it for output
 pause
 goto menu
 
-:launch_nextjs
+:view_logs
 cls
-echo Starting Next.js Frontend...
-if not exist "%PROJECT_PATH%\package.json" (
-    echo ERROR: package.json not found
-    pause
-    goto menu
+echo ===================================================
+echo   LIVE LOG FILES
+echo ===================================================
+echo.
+if exist "%LOGS_PATH%" (
+    dir /b "%LOGS_PATH%\*.log" 2>nul
+    if errorlevel 1 echo No log files found yet
+) else (
+    echo Logs directory not found
 )
-start "Next.js" cmd /k "cd /d "%PROJECT_PATH%" && npm run dev"
-echo Next.js running at http://localhost:%FRONTEND_PORT%
+echo.
+echo To view a log file, type: type %LOGS_PATH%\filename.log
+echo.
 pause
 goto menu
 
@@ -228,14 +317,14 @@ cls
 echo Starting SearXNG Web Search...
 docker start searxng >nul 2>&1
 if %errorlevel%==0 (
-    echo ✅ SearXNG running at http://localhost:%SEARXNG_PORT%
+    echo [OK] SearXNG running at http://localhost:%SEARXNG_PORT%
 ) else (
     echo Creating new SearXNG container...
     docker run -d --name searxng -p %SEARXNG_PORT%:8080 searxng/searxng:latest
     if %errorlevel%==0 (
-        echo ✅ SearXNG created and running
+        echo [OK] SearXNG created and running
     ) else (
-        echo ❌ Failed - Is Docker Desktop running with WSL2 integration?
+        echo [ERROR] Failed - Is Docker Desktop running?
     )
 )
 pause
@@ -248,61 +337,73 @@ if exist "%PROJECT_PATH%\mcp_servers" (
     echo Killing old MCP processes...
     wsl -d %WSL_DISTRO% -e bash -c "pkill -f mcp_servers" >nul 2>&1
     
-    echo Starting executive_mcp.py...
-    start "MCP-Executive" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/executive_mcp.py"
+    echo Starting executive_mcp.py (visible)...
+    start "MCP-Executive" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-EXEC] Starting...' && python3 mcp_servers/executive_mcp.py"
     
-    echo Starting system_mcp.py...
-    start "MCP-System" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/system_mcp.py"
+    echo Starting system_mcp.py (visible)...
+    start "MCP-System" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-SYS] Starting...' && python3 mcp_servers/system_mcp.py"
     
-    echo Starting process_mcp.py...
-    start "MCP-Process" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/process_mcp.py"
+    echo Starting process_mcp.py (visible)...
+    start "MCP-Process" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-PROC] Starting...' && python3 mcp_servers/process_mcp.py"
     
-    echo Starting research_mcp.py...
-    start "MCP-Research" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/research_mcp.py"
+    echo Starting research_mcp.py (visible)...
+    start "MCP-Research" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-RESEARCH] Starting...' && python3 mcp_servers/research_mcp.py"
     
-    echo Starting rag_pipeline.py...
-    start "MCP-RAG" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && python3 mcp_servers/rag_pipeline.py"
+    echo Starting rag_pipeline.py (visible)...
+    start "MCP-RAG" wsl -d %WSL_DISTRO% bash -c "cd /mnt/d/okiru-os/The\ Reztack\ OS && echo '[MCP-RAG] Starting...' && python3 mcp_servers/rag_pipeline.py"
     
-    echo ✅ All MCP servers started
+    echo [OK] All MCP servers started - Check their windows
 ) else (
-    echo ❌ MCP servers directory not found at: %PROJECT_PATH%\mcp_servers
-    dir "%PROJECT_PATH%" | findstr "mcp"
+    echo [ERROR] MCP servers directory not found
 )
 pause
 goto menu
 
 :status
 cls
-echo ========================================
-echo   COMPLETE SERVICE STATUS
-echo ========================================
+echo ===================================================
+echo   SERVICE STATUS
+echo ===================================================
 echo.
 
-:: Check ports
-netstat -ano | findstr ":%FRONTEND_PORT%" | findstr "LISTENING" >nul && echo ✅ Next.js:   RUNNING || echo ❌ Next.js:   OFFLINE
-netstat -ano | findstr ":%API_PORT%" | findstr "LISTENING" >nul && echo ✅ FastAPI:   RUNNING || echo ❌ FastAPI:   OFFLINE
-netstat -ano | findstr ":%CHROMA_PORT%" | findstr "LISTENING" >nul && echo ✅ ChromaDB:  RUNNING || echo ❌ ChromaDB:  OFFLINE
-netstat -ano | findstr ":11434" | findstr "LISTENING" >nul && echo ✅ Ollama:    RUNNING || echo ⚠️ Ollama:    OFFLINE
+:: Check ports - prioritize 3001 as primary
+netstat -ano | findstr ":3001" | findstr "LISTENING" >nul
+if %errorlevel%==0 (
+    echo [OK] Next.js:   RUNNING on port 3001 (primary)
+) else (
+    netstat -ano | findstr ":3000" | findstr "LISTENING" >nul
+    if %errorlevel%==0 (
+        echo [OK] Next.js:   RUNNING on port 3000
+    ) else (
+        echo [OFF] Next.js:   OFFLINE
+    )
+)
+
+netstat -ano | findstr ":%API_PORT%" | findstr "LISTENING" >nul && echo [OK] FastAPI:   RUNNING on port %API_PORT% || echo [OFF] FastAPI:   OFFLINE
+netstat -ano | findstr ":%CHROMA_PORT%" | findstr "LISTENING" >nul && echo [OK] ChromaDB:  RUNNING on port %CHROMA_PORT% || echo [OFF] ChromaDB:  OFFLINE
+netstat -ano | findstr ":11434" | findstr "LISTENING" >nul && echo [OK] Ollama:    RUNNING || echo [WARN] Ollama:    OFFLINE
 
 :: Check Docker
-docker ps 2>nul | findstr "searxng" >nul && echo ✅ SearXNG:   RUNNING || echo ⚠️ SearXNG:   OFFLINE
+docker ps 2>nul | findstr "searxng" >nul && echo [OK] SearXNG:   RUNNING || echo [WARN] SearXNG:   OFFLINE
 
-:: Check MCP
-wsl -d %WSL_DISTRO% -e bash -c "pgrep -f mcp_servers" 2>nul | findstr /v "^$" >nul && echo ✅ MCP:       RUNNING || echo ⚠️ MCP:       OFFLINE
+:: Check if windows are open
+tasklist | findstr "python.exe" >nul && echo [OK] Python:    RUNNING || echo [WARN] Python:    STOPPED
+tasklist | findstr "node.exe" >nul && echo [OK] Node:      RUNNING || echo [WARN] Node:      STOPPED
 
+echo.
+echo ACTIVE WINDOWS SHOULD INCLUDE:
+echo - ChromaDB, FastAPI, Next.js, MCP-* (if launched)
 echo.
 pause
 goto menu
 
 :list_models
 cls
-echo ========================================
+echo ===================================================
 echo   AVAILABLE OLLAMA MODELS
-echo ========================================
+echo ===================================================
 echo.
 ollama list
-echo.
-echo 📍 Total models: 22
 echo.
 pause
 goto menu
@@ -314,6 +415,12 @@ taskkill /F /IM python.exe >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
 docker stop searxng >nul 2>&1
 wsl -d %WSL_DISTRO% -e bash -c "pkill -f mcp_servers" >nul 2>&1
-echo ✅ All services stopped
+
+:: Also kill anything on port 8001 specifically
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8001 ^| findstr LISTENING') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
+
+echo [OK] All services stopped
 pause
 goto menu
