@@ -1,52 +1,67 @@
-﻿"""
-Eyes Worker - Web search and network analysis
-"""
-
-import aiohttp
 import asyncio
+import ollama
 import logging
+from ddgs import DDGS
 
 logger = logging.getLogger(__name__)
 
 class EyesWorker:
     def __init__(self):
-        self.name = "eyes"
-        self.description = "Web search and network analysis"
-    
-    async def search_duckduckgo(self, query: str) -> str:
-        """Search using DuckDuckGo API"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                params = {
-                    'q': query,
-                    'format': 'json',
-                    'no_html': 1,
-                    'skip_disambig': 1,
-                    't': 'rez_hive'
-                }
-                async with session.get('https://api.duckduckgo.com/', params=params, timeout=8) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        results = []
-                        
-                        if data.get('AbstractText'):
-                            results.append(f"## {data.get('AbstractTitle', 'Summary')}")
-                            results.append(data['AbstractText'])
-                        
-                        if data.get('RelatedTopics'):
-                            results.append("\n## Related")
-                            for topic in data['RelatedTopics'][:5]:
-                                if 'Text' in topic:
-                                    results.append(f"• {topic['Text']}")
-                        
-                        return "\n\n".join(results) if results else "No results found"
-            return "Search unavailable"
-        except Exception as e:
-            return f"Search error: {e}"
-    
+        self.name = "search"
+        self.description = "Network Analysis and Web Search"
+        # We default to llama3.2 here for fast text summarization, 
+        # but llava:7b is great if you ever add image analysis!
+        self.default_model = "llama3.2:latest" 
+
     async def process(self, task: str, model: str = None) -> dict:
-        """Process search queries"""
-        if "search" in task.lower() or "look up" in task.lower():
-            results = await self.search_duckduckgo(task)
-            return {"content": results}
-        return {"content": "Eyes worker ready. Try 'search for...'"}
+        active_model = model or self.default_model
+        logger.info(f"🌐 Eyes Worker initiating web sweep for: {task}")
+        
+        try:
+            # 1. Perform the Live Web Search
+            search_results_text = ""
+            
+            # Run the synchronous DuckDuckGo search in a background thread to prevent blocking
+            def fetch_search():
+                with DDGS() as ddgs:
+                    return list(ddgs.text(task, max_results=3))
+                    
+            results = await asyncio.to_thread(fetch_search)
+            
+            if not results:
+                return {"content": "⚠️ Web search executed, but no results were found."}
+
+            # Format the live data
+            for idx, r in enumerate(results):
+                search_results_text += f"[{idx+1}] {r['title']}\n{r['body']}\n\n"
+
+            # 2. Feed the Live Data to the Local AI to summarize
+            prompt = f"""You are the Eyes Worker of REZ HIVE. You just performed a live web search.
+            Based ONLY on the following live internet data, answer the user's prompt directly and concisely. 
+            Do NOT say "I don't have real-time access" because the data is provided below.
+            
+            User Task: {task}
+            
+            Live Web Data:
+            {search_results_text}
+            """
+            
+            response = await asyncio.to_thread(
+                ollama.chat,
+                model=active_model,
+                messages=[{"role": "user", "content": prompt}],
+                options={"temperature": 0.3}
+            )
+            
+            final_answer = response['message']['content'].strip()
+            
+            # Format nicely for the UI
+            formatted_output = f"🌐 **LIVE WEB TELEMETRY INJECTED**\n\n{final_answer}\n\n---\n*Sources scanned:* \n"
+            for r in results:
+                formatted_output += f"- [{r['title']}]({r['href']})\n"
+                
+            return {"content": formatted_output}
+            
+        except Exception as e:
+            logger.error(f"Eyes Worker Web Error: {e}")
+            return {"content": f"⚠️ **CONNECTION FAILED**\n\n[!] Web search unavailable: {str(e)}\nEnsure `duckduckgo-search` is installed."}
