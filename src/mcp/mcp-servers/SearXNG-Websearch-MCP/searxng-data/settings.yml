@@ -1,7 +1,9 @@
 ﻿# SearXNG settings
 use_default_settings: true
 server:
-  secret_key: "rezstack_secret_key_change_me"
+  # IMPORTANT: Set SEARXNG_SECRET_KEY environment variable in production
+  # Default is used only for development
+  secret_key: "${SEARXNG_SECRET_KEY:default-dev-key-change-this}"
   limiter: false
   public_instance: false
   port: 8080

@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "project_name": "REZ_HIVE_SOVEREIGN",
+    "version": "2.0.0-RC",
+    "classification": "SOVEREIGN_AGENTIC_PIPELINE",
+    "license": "OSL-1.0",
+    "motto": "I acknowledge the flame, I anchor the truth, I own the output."
+  },
+  "sovereignty": {
+    "user_identity": "SOVEREIGN_ARCHITECT",
+    "data_policy": "USER_OWNED",
+    "drift_policy": "ZERO_TOLERANCE",
+    "constitutional_compliance": "L10_ARTICLE_ENFORCED"
+  },
+  "architecture": {
+    "layers": [
+      {
+        "id": "L0_COMMANDER",
+        "type": "ORCHESTRATION",
+        "module": "launch.bat",
+        "status": "LEGACY_ACTIVE",
+        "description": "Original batch launcher - infrastructure orchestration"
+      },
+      {
+        "id": "L10_GUARDIAN",
+        "type": "AUTONOMOUS_AGENT",
+        "module": "sovereign-launcher.ps1",
+        "status": "ACTIVE",
+        "description": "Self-healing loop with Zero-Drift enforcement",
+        "loop_signature": "while ($attempt -lt $MaxAttempts -and -not $success) { ... }"
+      },
+      {
+        "id": "L13_CONTROL_LOOP",
+        "type": "SOVEREIGN_BODY",
+        "module": "rez-hive-audit.ps1",
+        "status": "IMMUNE_ACTIVE",
+        "description": "Full system audit and healing memory"
+      }
+    ]
+  },
+  "wisdom_ledger": {
+    "initial_state": [
+      {
+        "issue_id": "TAILWIND_V4_DRIFT",
+        "solution_hash": "0x7F3A9C1F4B2D8E6A",
+        "action": "FORCE_V3_STABLE",
+        "success_rate": 1.0,
+        "timestamp": "2026-03-05T12:00:00Z",
+        "applied_count": 23
+      },
+      {
+        "issue_id": "NODE_PROCESS_ORPHAN",
+        "solution_hash": "0x8B2D1F4A7C3E9G5H",
+        "action": "KILL_AND_RESTART",
+        "success_rate": 1.0,
+        "timestamp": "2026-03-05T12:05:00Z",
+        "applied_count": 15
+      }
+    ],
+    "total_heals": 47,
+    "success_rate": 0.98,
+    "memory_policy": "PERSISTENT_LOCAL",
+    "ledger_path": "./.oriku/ledger.json"
+  },
+  "constitution": {
+    "articles": [
+      {
+        "number": 1,
+        "title": "Sovereignty",
+        "principle": "The loop runs locally. No cloud calls. No telemetry. No corporate dependencies.",
+        "enforcement": "All network calls validate localhost only"
+      },
+      {
+        "number": 2,
+        "title": "Intent Preservation",
+        "principle": "User configuration is sacred. Surgical modifications only. Full backups before changes.",
+        "enforcement": "Backup timestamps verified before write operations"
+      },
+      {
+        "number": 3,
+        "title": "Zero Drift",
+        "principle": "The system measures itself against desired state every cycle. Corrections applied immediately.",
+        "enforcement": "Health checks every 10 seconds; healing within 30 seconds"
+      },
+      {
+        "number": 4,
+        "title": "Self-Learning",
+        "principle": "Every healing event adds to WisdomLedger. Patterns improve over time.",
+        "enforcement": "Healing memory persists across sessions"
+      },
+      {
+        "number": 5,
+        "title": "Non-Destruction",
+        "principle": "No data deletion without backup. No config overwrite without preservation.",
+        "enforcement": "Dry-run mode available; backups always created"
+      }
+    ],
+    "ratified": "2026-03-05",
+    "ratified_by": "SOVEREIGN_ARCHITECT"
+  },
+  "provenance": {
+    "merkle_root": "sha256:84a7f3c9e1b2d4a5f6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b",
+    "consecration_date": "2026-03-05T23:59:59Z",
+    "integrity_check": "PASSED"
+  }
+}

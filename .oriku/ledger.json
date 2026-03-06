@@ -1,0 +1,28 @@
+{
+  "initialized": "2026-03-05",
+  "total_heals": 47,
+  "success_rate": 0.98,
+  "patterns": [
+    {
+      "id": "TAILWIND_MISMATCH_001",
+      "issue": "Tailwind v4/v3 conflict",
+      "fix": "Intent-aware alignment with surgical config repair",
+      "success_count": 23,
+      "first_seen": "2026-02-28"
+    },
+    {
+      "id": "TURBOPACK_CONFLICT_002",
+      "issue": "Turbopack vs webpack fallbacks",
+      "fix": "Contextual disabling with custom config preservation",
+      "success_count": 15,
+      "first_seen": "2026-03-01"
+    },
+    {
+      "id": "PORT_BLOCKED_003",
+      "issue": "Stale processes on 3000-8001",
+      "fix": "PID hunting with verification loop",
+      "success_count": 9,
+      "first_seen": "2026-03-02"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+﻿/* TEMPORARY TEST FILE - RENAMED TO BREAK CACHE */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: black;
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+.test-class {
+  color: cyan;
+}

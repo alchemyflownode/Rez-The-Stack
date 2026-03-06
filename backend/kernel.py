@@ -21,6 +21,12 @@ import logging
 # ============================================================================
 # ZERO-DRIFT IMPORTS
 # ============================================================================
+
+# Worker imports
+from workers.brain_worker import BrainWorker
+from workers.eyes_worker import EyesWorker
+from workers.hands_worker import HandsWorker
+from workers.memory_worker import MemoryWorker
 from ps1_integration import router as ps1_router
 from zero_drift_core import constitution, ZeroDriftConstitution
 from drift_detector import detector, ZeroDriftDetector
@@ -116,179 +122,10 @@ class Worker:
     async def process(self, task: str, model: str = None) -> dict:
         return {"content": f"Worker {self.name} processed: {task}"}
 
-class BrainWorker(Worker):
-    def __init__(self):
-        super().__init__("brain", "General reasoning and chat", "llama3.2:latest")
 
-    async def process(self, task: str, model: str = None) -> dict:
-        model_to_use = model or self.model
-        response = ollama.chat(
-            model=model_to_use,
-            messages=[{"role": "user", "content": task}],
-            stream=False,
-        )
-        return {"content": response["message"]["content"]}
 
-class SearchWorker(Worker):
-    def __init__(self):
-        super().__init__("search", "Web search and information retrieval")
 
-    async def process(self, task: str, model: str = None) -> dict:
-        """Search using DuckDuckGo or fallback to local processing"""
-        try:
-            # First, try using the Brain worker to provide knowledge-based results
-            brain_worker = BrainWorker()
-            
-            # Craft a search-optimized prompt
-            search_prompt = f"""You are a search assistant. Provide relevant, factual information about: {task}
 
-Format your response as:
-1. Key Finding: [Main result]
-2. Details: [Supporting information]  
-3. Related: [Related topics]
-
-Be concise and informative."""
-            
-            result = await asyncio.wait_for(
-                brain_worker.process(search_prompt, model=model or "llama3.2:latest"),
-                timeout=30
-            )
-            return result
-            
-        except asyncio.TimeoutError:
-            return {"content": f"Search timed out for: '{task}'. Please try a simpler query."}
-        except Exception as e:
-            return {"content": f"Search unavailable: {str(e)}. Try asking the Brain worker directly about '{task}'."}
-            
-
-class SearchWorker_DuckDuckGo(Worker):
-    """Alternative SearchWorker using DuckDuckGo if available"""
-    def __init__(self):
-        super().__init__("search", "Web search using DuckDuckGo (when available)")
-
-    async def process(self, task: str, model: str = None) -> dict:
-        """Search using DuckDuckGo Instant Answer API"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                # Use DuckDuckGo Instant Answer API
-                params = {
-                    'q': task,
-                    'format': 'json',
-                    'no_redirect': '1',
-                    'no_html': '1',
-                    'skip_disambig': '1'
-                }
-                async with session.get('https://api.duckduckgo.com/', params=params, timeout=aiohttp.ClientTimeout(total=8)) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        
-                        # Extract results in a readable format
-                        results_text = ""
-                        
-                        # Add instant answer if available
-                        if data.get('AbstractText'):
-                            results_text += f"**{data.get('AbstractTitle', 'Information')}**\n"
-                            results_text += f"{data.get('AbstractText')}\n\n"
-                        
-                        # Add related topics
-                        if data.get('RelatedTopics'):
-                            results_text += "**Related Topics:**\n"
-                            for topic in data.get('RelatedTopics', [])[:3]:
-                                if 'Text' in topic:
-                                    results_text += f"- {topic.get('Text', '')}\n"
-                        
-                        if results_text:
-                            return {"content": results_text}
-                        else:
-                            return {"content": f"No direct results found for '{task}'. DuckDuckGo may have limited information."}
-                    else:
-                        return {"content": f"Search service temporarily unavailable (status: {resp.status})"}
-        except asyncio.TimeoutError:
-            return {"content": f"Search request timed out for '{task}'"}
-        except Exception as e:
-            return {"content": f"Search error: {str(e)}"}
-
-class CodeWorker(Worker):
-    def __init__(self):
-        super().__init__("code", "Code generation", "qwen2.5-coder:14b")
-
-    async def process(self, task: str, model: str = None) -> dict:
-        model_to_use = model or self.model
-        response = ollama.chat(
-            model=model_to_use,
-            messages=[{"role": "user", "content": task}],
-            stream=False,
-        )
-        return {"code": response["message"]["content"]}
-
-class MemoryWorker(Worker):
-    def __init__(self):
-        # We keep the name "files" so Pydantic validation on the frontend doesn't break
-        super().__init__("files", "Persistent Vector Memory & File Operations", "llama3.2:latest")
-        self.chroma = None
-        self.collection = None
-        try:
-            import chromadb
-            # Connect to the local ChromaDB instance
-            self.chroma = chromadb.HttpClient(host='localhost', port=8000)
-            self.collection = self.chroma.get_or_create_collection("rez_hive_memory")
-            logger.info("✅ MemoryWorker connected to ChromaDB on port 8000")
-        except Exception as e:
-            logger.warning(f"⚠️ MemoryWorker running without ChromaDB: {e}")
-
-    async def process(self, task: str, model: str = None) -> dict:
-        task_lower = task.lower().strip()
-        
-        # 1. HANDLE CHROMA DB MEMORY OPERATIONS
-        if task_lower.startswith("remember"):
-            if not self.chroma:
-                return {"content": "⚠️ **ChromaDB is offline.** Cannot store memories. Start it on port 8000."}
-                
-            content = task[8:].strip()
-            if not content:
-                return {"content": "What would you like me to remember? (e.g., 'remember the server IP is 192.168.1.5')"}
-                
-            import hashlib
-            doc_id = f"mem_{hashlib.md5(content.encode()).hexdigest()[:10]}"
-            self.collection.add(documents=[content], ids=[doc_id])
-            return {"content": f"💾 **Successfully encoded into persistent memory:**\n> {content}"}
-            
-        elif task_lower.startswith("recall") or task_lower.startswith("search memory"):
-            if not self.chroma:
-                return {"content": "⚠️ **ChromaDB is offline.** Cannot recall memories."}
-                
-            query = task_lower.replace("recall", "").replace("search memory", "").strip()
-            if not query:
-                return {"content": "What would you like me to recall?"}
-                
-            results = self.collection.query(query_texts=[query], n_results=3)
-            
-            if results['documents'] and results['documents'][0]:
-                formatted = "📚 **Retrieved Context from ChromaDB:**\n\n"
-                for i, doc in enumerate(results['documents'][0], 1):
-                    formatted += f"{i}. {doc}\n"
-                return {"content": formatted}
-            else:
-                return {"content": f"No persistent memories found relating to: '{query}'"}
-
-        # 2. FALLBACK TO FILE OPERATIONS (To keep your /list_files quick command working)
-        elif task_lower == "list files" or task_lower == "/list_files":
-            import os
-            try:
-                files = os.listdir(".")[:15]
-                formatted = "**Current Directory Contents:**\n" + "\n".join(f"- `{f}`" for f in files)
-                return {"content": formatted}
-            except Exception as e:
-                return {"content": f"File error: {e}"}
-                
-        # 3. DEFAULT RESPONSE
-        return {
-            "content": "🧠 **Memory Worker Online.**\n\n**Commands:**\n- `remember[information]` - Store in ChromaDB\n- `recall [topic]` - Search vector database\n- `/list_files` - View local directory"
-        }
-
-# ============================================================================ 
-# Worker Registry
-# ============================================================================
 class WorkerRegistry:
     def __init__(self):
         self.workers = {}
@@ -359,7 +196,7 @@ app.add_middleware(
 app.include_router(ps1_router, prefix="/api/v1")
 
 # ============================================================================
-# LIFESPAN MANAGEMENT (Modern FastAPI pattern)
+# LIFESPAN MANAGEMENT
 # ============================================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -390,44 +227,36 @@ async def lifespan(app: FastAPI):
     detector.running = False
     logger.info("👋 Goodbye")
 
-# Replace the on_event decorators with lifespan
 app.router.lifespan_context = lifespan
 
 mcp_manager = MCPManager()
 workers = WorkerRegistry()
 workers.register(BrainWorker())
-workers.register(SearchWorker())
-workers.register(CodeWorker())
-workers.register(MemoryWorker()) # <-- Upgraded worker integration
+workers.register(EyesWorker())
+workers.register(HandsWorker())
+workers.register(MemoryWorker())
 
 # ============================================================================
-# CONSTITUTIONAL AI INITIALIZATION (GOVERNANCE FOUNDATION)
+# CONSTITUTIONAL AI INITIALIZATION
 # ============================================================================
-# Zero-drift constitution (new)
-zero_drift_constitution = constitution  # Already imported
-
-# Legacy constitutional components (keep for backward compatibility)
+zero_drift_constitution = constitution
 legacy_constitution = LegacyConstitution()
 execution_guard = ExecutionGuard(invariant_registry)
 interception = InterceptionEngine(invariant_registry)
 audit = ConstitutionalAudit()
 
 # ============================================================================ 
-# Stream Generator with Constitutional Validation
+# Stream Generator with Intent Routing
 # ============================================================================
 async def format_response_for_streaming(result: dict, worker_name: str) -> str:
     """Format worker response for nice display with syntax highlighting"""
-    # If there's an error, return it as-is
     if "error" in result:
         return result.get("error", "Unknown error")
     
-    # Handle different response types
     if "content" in result:
         return result["content"]
     elif "code" in result:
-        # Wrap code in markdown fence for syntax highlighting
         code_content = result["code"]
-        # Try to detect language from context
         lang = "python" if worker_name == "code" else "text"
         return f"```{lang}\n{code_content}\n```"
     elif "files" in result:
@@ -447,10 +276,8 @@ async def format_response_for_streaming(result: dict, worker_name: str) -> str:
             return formatted
         return str(results)
     else:
-        # For any other response, check if we should pretty-print it
         import json as json_lib
         try:
-            # If it's a dict with multiple fields, pretty-print as JSON
             if len(result) > 1 or (len(result) == 1 and not any(k in result for k in['content', 'code', 'files', 'results'])):
                 return f"```json\n{json_lib.dumps(result, indent=2)}\n```"
         except:
@@ -459,17 +286,30 @@ async def format_response_for_streaming(result: dict, worker_name: str) -> str:
 
 async def generate_stream(task: str, worker_name: str = "brain", model: str = None, session_id: str = None, db: AsyncSession = None):
     try:
-        # CONSTITUTIONAL CHECK FIRST - ZERO-DRIFT ENFORCEMENT
+        # =========================================================
+        # INTENT ROUTING - THIS MUST BE FIRST!
+        # =========================================================
+        task_lower = task.lower()
+        
+        # PC Search commands -> Memory Worker (files)
+        if any(phrase in task_lower for phrase in [
+            'search pc', 'find on pc', 'search computer', 'find file', 
+            'locate file', 'list drives', 'disk space', 'show drives',
+            'search entire pc', 'find on computer', 'find all',
+            'search for file', 'drive list', 'storage'
+        ]):
+            worker_name = "files"
+            logger.info(f"🔄 Routed to Memory Worker: {task[:50]}...")
+        
+        # CONSTITUTIONAL CHECK
         ruling = zero_drift_constitution.validate_task(task, worker_name, session_id or "anonymous")
         
-        # Log constitutional ruling
         logger.info(f"Constitutional ruling for {worker_name}: {ruling['verdict']}", extra={
             "ruling_id": ruling.get("ruling_id"),
             "verdict": ruling["verdict"],
             "violations": ruling["violations"]
         })
         
-        # Handle denied tasks
         if ruling["verdict"] == "denied":
             error_msg = f"⚠️ Constitutional violation: {ruling['reason']}"
             yield sse({
@@ -481,7 +321,6 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
             yield sse({"status": "failed"})
             return
         
-        # Handle tasks requiring confirmation
         if ruling["requires_confirmation"]:
             yield sse({
                 "warning": ruling["reason"],
@@ -489,11 +328,10 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
                 "requires_confirmation": True,
                 "ruling_id": ruling.get("ruling_id")
             })
-            # For now, proceed (frontend would need to handle confirmation)
         
         yield sse({"status": "started", "worker": worker_name, "constitutional": ruling["verdict"]})
         
-        # Save user message if session and db available
+        # Save user message
         if session_id and db:
             chat_service = ChatService(db)
             await chat_service.save_message(
@@ -510,7 +348,7 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
             yield sse({"status": "failed"})
             return
         
-        # Execute worker with timeout
+        # Execute worker
         try:
             result = await asyncio.wait_for(worker.process(task, model=model), timeout=60)
         except asyncio.TimeoutError:
@@ -518,10 +356,10 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
             yield sse({"status": "failed"})
             return
         
-        # Format response nicely
+        # Format response
         formatted_content = await format_response_for_streaming(result, worker_name)
         
-        # Save AI response if session and db available
+        # Save AI response
         if session_id and db and "error" not in result:
             chat_service = ChatService(db)
             await chat_service.save_message(
@@ -532,20 +370,17 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
                 model=model or (worker.model if hasattr(worker, 'model') else "unknown")
             )
             
-            # Log worker execution
             worker_log_service = WorkerLogService(db)
             await worker_log_service.log_execution(
                 worker=worker_name,
                 status="success",
-                processing_time_ms=0,  # TODO: Calculate actual time
+                processing_time_ms=0,
                 input_length=len(task),
                 output_length=len(formatted_content)
             )
         
-        # Stream the formatted content
         yield sse({"content": formatted_content})
         
-        # Check for MCP fallback
         if result.get("error") and "research" in mcp_manager.servers:
             mcp_result = await mcp_manager.call("research", "search", {"query": task})
             yield sse(mcp_result)
@@ -558,17 +393,15 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
         yield sse({"status": "failed"})
 
 # ============================================================================ 
-# Endpoints - Phase 1 Enhanced
+# Endpoints
 # ============================================================================
 
-# Session Management
 @app.post("/auth/session", response_model=SessionResponse)
 async def create_session(db: AsyncSession = Depends(get_db)):
     """Create a new session with JWT token"""
     session_id = create_session_id()
     token = create_access_token(session_id)
     
-    # Create user in database
     user_service = UserService(db)
     await user_service.get_or_create_user(session_id)
     
@@ -596,7 +429,6 @@ async def kernel_stream(request: Request, db: AsyncSession = Depends(get_db)):
         media_type="text/event-stream"
     )
 
-# Chat History
 @app.get("/chat/{session_id}/history")
 async def get_chat_history(session_id: str, limit: int = 50, db: AsyncSession = Depends(get_db)):
     """Retrieve chat history for a session"""
@@ -625,7 +457,6 @@ async def clear_chat_history(session_id: str, db: AsyncSession = Depends(get_db)
     count = await chat_service.clear_session_chat(session_id)
     return {"message": f"Chat history cleared ({count} messages)", "session_id": session_id}
 
-# Health & Monitoring
 @app.get("/health")
 async def health_check(db: AsyncSession = Depends(get_db)):
     """Service health check with drift status"""
@@ -635,7 +466,6 @@ async def health_check(db: AsyncSession = Depends(get_db)):
         status="healthy"
     )
     
-    # Get drift report
     drift_report = detector.get_drift_report() if hasattr(detector, 'get_drift_report') else None
     
     return HealthCheckResponse(
@@ -665,7 +495,7 @@ async def get_worker_stats(worker_name: str, hours: int = 24, db: AsyncSession =
 @app.get("/workers")
 async def list_workers():
     """List available workers"""
-    workers_info =[]
+    workers_info = []
     for name, worker in workers.workers.items():
         workers_info.append({
             "name": name,
@@ -682,10 +512,8 @@ async def worker_health(worker_name: str):
     if not worker:
         raise HTTPException(status_code=404, detail=f"Worker '{worker_name}' not found")
     
-    # Simple health check - try a ping
     try:
         if worker_name == "brain":
-            # Test Ollama connection
             test = await asyncio.wait_for(worker.process("ping", timeout=5), timeout=5)
             healthy = "error" not in test
         else:
@@ -710,17 +538,16 @@ async def list_mcp_servers():
     }
 
 # ============================================================================ 
-# Admin/Operational Endpoints (PS1-Style Controller)
+# Admin/Operational Endpoints
 # ============================================================================
 
 @app.post("/admin/kill-port")
 async def kill_port_endpoint(port: int = 8001):
-    """Kill processes using a specific port (Windows/Linux compatible)"""
+    """Kill processes using a specific port"""
     try:
         killed = False
-        killed_pids =[]
+        killed_pids = []
         
-        # Try to find and kill process using the port
         try:
             for conn in psutil.net_connections():
                 if hasattr(conn, 'laddr') and conn.laddr.port == port and conn.pid:
@@ -736,10 +563,8 @@ async def kill_port_endpoint(port: int = 8001):
         except Exception as e:
             logger.warning(f"psutil method failed: {e}")
             
-            # Fallback: Try Windows-specific command
             import platform
             if platform.system() == "Windows":
-                # Find PID using netstat
                 result = subprocess.run(
                     f'netstat -ano | findstr :{port}',
                     shell=True,
@@ -762,7 +587,7 @@ async def kill_port_endpoint(port: int = 8001):
                                     pass
         
         if killed:
-            await asyncio.sleep(1)  # Give it time to actually die
+            await asyncio.sleep(1)
             return {
                 "status": "success",
                 "message": f"Freed port {port}",
@@ -772,7 +597,7 @@ async def kill_port_endpoint(port: int = 8001):
             return {
                 "status": "not_found",
                 "message": f"No process found on port {port}",
-                "killed_pids":[]
+                "killed_pids": []
             }
     
     except Exception as e:
@@ -780,22 +605,16 @@ async def kill_port_endpoint(port: int = 8001):
         return {
             "status": "error",
             "message": str(e),
-            "killed_pids":[]
+            "killed_pids": []
         }
 
 @app.post("/admin/launch-all")
 async def launch_all_services():
     """Launch all services (for browser-based control)"""
     try:
-        # This is informational - actual launching still needs to be done from terminal
-        # But we can verify what's running and suggest what's missing
-        
         services_status = {}
-        
-        # Check kernel (we're running, so always true)
         services_status["kernel"] = True
         
-        # Check if Next.js is running
         try:
             import socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -805,7 +624,6 @@ async def launch_all_services():
         except:
             services_status["nextjs"] = False
         
-        # Check if ChromaDB is running
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex(('127.0.0.1', 8000))
@@ -814,7 +632,6 @@ async def launch_all_services():
         except:
             services_status["chroma"] = False
         
-        # Log what's running
         message = "Service Status:\n"
         for service, running in services_status.items():
             status_str = "✅ Running" if running else "❌ Not Running"
@@ -863,15 +680,18 @@ if __name__ == "__main__":
     print("🏛️  REZ HIVE KERNEL - Zero-Drift Sovereign AI")
     print("=" * 60)
     print(f"[OK] Workers: {len(workers.workers)}")
+    for name, worker in workers.workers.items():
+        print(f"      - {name}: {worker.description}")
     print(f"[OK] MCP Servers: {len(mcp_manager.servers)}")
     print(f"[OK] Database: SQLite with connection pooling")
     print(f"[OK] Logging: Structured JSON")
     print(f"[OK] Authentication: JWT enabled")
     print(f"[OK] Constitutional AI: 9 Articles active")
     print(f"[OK] Zero-Drift Detector: Active")
+    print(f"[OK] Intent Routing: PC Search → Memory Worker")
+    print(f"[OK] Online Search: DuckDuckGo Grounding Enabled")
     print("=" * 60)
     
-    # Try port 8001, if in use try 8002
     import socket
     port = 8001
     try:
@@ -888,6 +708,11 @@ if __name__ == "__main__":
     
     print(f"🌐 API: http://localhost:{port}")
     print(f"📊 Docs: http://localhost:{port}/docs")
+    print(f"🔍 Online Search: Auto-detects factual questions")
+    print(f"💾 PC Search: Type 'search pc [filename]'")
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+
+

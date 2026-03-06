@@ -1,0 +1,238 @@
+﻿REZ HIVE - IMPORT & ENDPOINT SCAN
+Date: 03/03/2026 18:31:41
+================================
+
+NEXT.JS ENDPOINTS:
+
+Type        Method Endpoint                     File                                        
+----        ------ --------                     ----                                        
+Next.js API POST   //api/architect              /src/app/api/architect/route.ts             
+Next.js API POST   //api/autonomous             /src/app/api/autonomous/route.ts            
+Next.js API POST   //api/compute/execute        /src/app/api/compute/execute/route.ts       
+Next.js API GET    //api/compute/hardware       /src/app/api/compute/hardware/route.ts      
+Next.js API POST   //api/discover               /src/app/api/discover/route.ts              
+Next.js API GET    //api/domains                /src/app/api/domains/route.ts               
+Next.js API GET    //api/frontend/constitution  /src/app/api/frontend/constitution/route.ts 
+Next.js API GET    //api/frontend/health        /src/app/api/frontend/health/route.ts       
+Next.js API GET    //api/frontend/history       /src/app/api/frontend/history/route.ts      
+Next.js API GET    //api/frontend/workers       /src/app/api/frontend/workers/route.ts      
+Next.js API POST   //api/generate               /src/app/api/generate/route.ts              
+Next.js API POST   //api/governor-test          /src/app/api/governor-test/route.ts         
+Next.js API POST   //api/heal                   /src/app/api/heal/route.ts                  
+Next.js API GET    //api/heartbeat              /src/app/api/heartbeat/route.ts             
+Next.js API POST   //api/jetbrains              /src/app/api/jetbrains/route.ts             
+Next.js API POST   //api/kernel                 /src/app/api/kernel/route.ts                
+Next.js API GET    //api/learn                  /src/app/api/learn/route.ts                 
+Next.js API GET    //api/reminder               /src/app/api/reminder/route.ts              
+Next.js API POST   //api/synthesize             /src/app/api/synthesize/route.ts            
+Next.js API POST   //api/system/audit           /src/app/api/system/audit/route.ts          
+Next.js API GET    //api/system/config          /src/app/api/system/config/route.ts         
+Next.js API GET    //api/system/processes       /src/app/api/system/processes/route.ts      
+Next.js API GET    //api/system/snapshot        /src/app/api/system/snapshot/route.ts       
+Next.js API POST   //api/workers/app            /src/app/api/workers/app/route.ts           
+Next.js API POST   //api/workers/canvas         /src/app/api/workers/canvas/route.ts        
+Next.js API POST   //api/workers/code           /src/app/api/workers/code/route.ts          
+Next.js API POST   //api/workers/deepsearch     /src/app/api/workers/deepsearch/route.ts    
+Next.js API POST   //api/workers/director       /src/app/api/workers/director/route.ts      
+Next.js API POST   //api/workers/file           /src/app/api/workers/file/route.ts          
+Next.js API POST   //api/workers/mcp            /src/app/api/workers/mcp/route.ts           
+Next.js API POST   //api/workers/mutation       /src/app/api/workers/mutation/route.ts      
+Next.js API POST   //api/workers/rezstack       /src/app/api/workers/rezstack/route.ts      
+Next.js API POST   //api/workers/sce            /src/app/api/workers/sce/route.ts           
+Next.js API GET    //api/workers/status         /src/app/api/workers/status/route.ts        
+Next.js API POST   //api/workers/system_monitor /src/app/api/workers/system_monitor/route.ts
+Next.js API POST   //api/workers/vision         /src/app/api/workers/vision/route.ts        
+Next.js API POST   //api/workers/voice          /src/app/api/workers/voice/route.ts         
+Next.js API GET    //api                        /src/app/api/route.ts                       
+
+
+
+
+FASTAPI ENDPOINTS:
+
+Type    Method Endpoint          File              
+----    ------ --------          ----              
+FastAPI POST   /api/kernel       /backend/kernel.py
+FastAPI GET    /api/status       /backend/kernel.py
+FastAPI GET    /api/memory/stats /backend/kernel.py
+FastAPI GET    /                 /backend/kernel.py
+
+
+
+
+FRONTEND API CALLS:
+
+
+PROXY CONFIG:
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/kernel',
+        destination: 'http://localhost:8001/api/kernel',
+      },
+      {
+        source: '/api/status',
+        destination: 'http://localhost:8001/api/status',
+      },
+      {
+        source: '/api/memory/stats',
+        destination: 'http://localhost:8001/api/memory/stats',
+      },
+    ]
+  },
+}
+
+module.exports = nextConfig
+
+
+IMPORT STATS:
+
+Name                           Value                                                                                   
+----                           -----                                                                                   
+react                          98                                                                                      
+lucide-react                   59                                                                                      
+@/lib/utils                    53                                                                                      
+next/server                    42                                                                                      
+framer-motion                  25                                                                                      
+json                           22                                                                                      
+sys                            22                                                                                      
+path                           18                                                                                      
+child_process                  17                                                                                      
+util                           16                                                                                      
+os                             10                                                                                      
+class-variance-authority       8                                                                                       
+typing                         8                                                                                       
+datetime                       8                                                                                       
+fs                             7                                                                                       
+subprocess                     7                                                                                       
+pathlib                        7                                                                                       
+@/components/ui/button         5                                                                                       
+time                           5                                                                                       
+@radix-ui/react-slot           5                                                                                       
+@/lib/db                       5                                                                                       
+z-ai-web-dev-sdk               4                                                                                       
+@/components/ui/SovereignCard  4                                                                                       
+requests                       4                                                                                       
+psutil                         4                                                                                       
+sqlite3                        3                                                                                       
+react-resizable-panels         3                                                                                       
+@/lib/root-seeker              3                                                                                       
+fs/promises                    3                                                                                       
+functools                      2                                                                                       
+@/components/ui/SovereignBadge 2                                                                                       
+keyboard                       2                                                                                       
+remark-gfm                     2                                                                                       
+mcp.server.fastmcp             2                                                                                       
+./Glass                        2                                                                                       
+dataclasses                    2                                                                                       
+vram_monitor                   2                                                                                       
+./WorkerDetails                2                                                                                       
+pynvml                         2                                                                                       
+lib.gpu_manager                2                                                                                       
+urllib.parse                   2                                                                                       
+react-markdown                 2                                                                                       
+./PremiumSidebar               2                                                                                       
+./PremiumTerminal              2                                                                                       
+./ui/GlassCard                 2                                                                                       
+./PremiumWorkerGrid            2                                                                                       
+@radix-ui/react-dialog         2                                                                                       
+urllib.request                 2                                                                                       
+pyperclip                      2                                                                                       
+@radix-ui/react-label          2                                                                                       
+@/lib/workers/workerRegistry   2                                                                                       
+re                             2                                                                                       
+@/hooks/useWorkers             2                                                                                       
+os,                            2                                                                                       
+@radix-ui/react-switch         1                                                                                       
+crypto                         1                                                                                       
+@/components/PulseIndicator    1                                                                                       
+@/components/ui/separator      1                                                                                       
+./RezMeter                     1                                                                                       
+tkinter                        1                                                                                       
+html.parser                    1                                                                                       
+./hardware-context             1                                                                                       
+@radix-ui/react-progress       1                                                                                       
+@radix-ui/react-separator      1                                                                                       
+react-syntax-highlighter       1                                                                                       
+@radix-ui/react-hover-card     1                                                                                       
+@radix-ui/react-toast          1                                                                                       
+clsx                           1                                                                                       
+tailwind-merge                 1                                                                                       
+input-otp                      1                                                                                       
+@radix-ui/react-checkbox       1                                                                                       
+@/lib/delta-zero-engine        1                                                                                       
+@modelcontextprotocol/sdk/s... 1                                                                                       
+@radix-ui/react-radio-group    1                                                                                       
+@radix-ui/react-navigation-... 1                                                                                       
+@radix-ui/react-dropdown-menu  1                                                                                       
+@radix-ui/react-popover        1                                                                                       
+react-syntax-highlighter/di... 1                                                                                       
+@radix-ui/react-collapsible    1                                                                                       
+@/components/ui/label          1                                                                                       
+./ZeroDriftGlass               1                                                                                       
+@/zero/ui/components/glass/... 1                                                                                       
+next/font/google               1                                                                                       
+./ModernChat                   1                                                                                       
+@/components/ui/input          1                                                                                       
+@/zero/ui/components/kineti... 1                                                                                       
+react-day-picker               1                                                                                       
+@radix-ui/react-menubar        1                                                                                       
+./delta-zero-engine            1                                                                                       
+cmdk                           1                                                                                       
+@modelcontextprotocol/sdk/t... 1                                                                                       
+sentence_transformers          1                                                                                       
+./ui/VantaGlass                1                                                                                       
+./components/TwoBarMeter       1                                                                                       
+@radix-ui/react-avatar         1                                                                                       
+@radix-ui/react-context-menu   1                                                                                       
+@/components/WorkerActivity    1                                                                                       
+./ThinkingIndicator            1                                                                                       
+model_loader                   1                                                                                       
+@/lib/kernel/event-bus         1                                                                                       
+pkg_resources                  1                                                                                       
+@radix-ui/react-select         1                                                                                       
+threading                      1                                                                                       
+@radix-ui/react-alert-dialog   1                                                                                       
+chromadb                       1                                                                                       
+../components/PrimordialUI     1                                                                                       
+@modelcontextprotocol/sdk/s... 1                                                                                       
+vaul                           1                                                                                       
+@radix-ui/react-toggle-group   1                                                                                       
+@radix-ui/react-scroll-area    1                                                                                       
+@/hooks/use-mobile             1                                                                                       
+@/hooks/useApps                1                                                                                       
+next                           1                                                                                       
+@/components/ui/skeleton       1                                                                                       
+@/services/kernel.service      1                                                                                       
+./SkillRegistry                1                                                                                       
+@radix-ui/react-tabs           1                                                                                       
+@radix-ui/react-toggle         1                                                                                       
+sonner                         1                                                                                       
+./event-bus                    1                                                                                       
+@radix-ui/react-slider         1                                                                                       
+@/hooks/use-toast              1                                                                                       
+./ObsidianChat                 1                                                                                       
+../kernel/psalm139/Intimacy... 1                                                                                       
+tempfile                       1                                                                                       
+recharts                       1                                                                                       
+@/zero/ui/components/kineti... 1                                                                                       
+@/components/ui                1                                                                                       
+./SovereignCard                1                                                                                       
+./sovereign-agent-protocol     1                                                                                       
+./components/PrimordialUI      1                                                                                       
+@/components/ui/toggle         1                                                                                       
+zustand                        1                                                                                       
+@radix-ui/react-accordion      1                                                                                       
+@/zero/ui/hooks/useAgenticS... 1                                                                                       
+./PulseIndicator               1                                                                                       
+@radix-ui/react-aspect-ratio   1                                                                                       
+next-themes                    1                                                                                       
+./ui/SovereignCard             1                                                                                       
+../components/TwoBarMeter      1                                                                                       
+../components/CodeBlock        1                                                                                       
+
+
+
