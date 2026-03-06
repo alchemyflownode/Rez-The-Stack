@@ -12,33 +12,21 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from pydantic import BaseModel, Field, validator
-from typing import Optional, Dict, Any, List
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
-import logging
-
-# ============================================================================
-# ZERO-DRIFT IMPORTS
-# ============================================================================
-from ps1_integration import router as ps1_router
-from zero_drift_core import constitution, ZeroDriftConstitution
-from drift_detector import detector, ZeroDriftDetector
-import asyncio
 
 # Phase 1 Imports
 from models import ChatMessage, User
 from database import init_db, close_db, get_db
-from auth import create_session_id, create_access_token, verify_token, get_current_session
+from auth import create_session_id, create_access_token, verify_token
 from services import ChatService, UserService, WorkerLogService, HealthCheckService
-from middleware import setup_logging, RequestLoggingMiddleware, ErrorHandlingMiddleware
+from middleware import setup_logging
 
 # CONSTITUTIONAL AI - Zero Drift Governance (PHASE 0 - FOUNDATION)
-from constitutional_wrapper import ZeroDriftConstitution as LegacyConstitution
+from constitutional_wrapper import ZeroDriftConstitution
 from invariant_layer import ExecutionGuard, InterceptionEngine, invariant_registry
 from constitutional_audit import ConstitutionalAudit
-
-logger = logging.getLogger(__name__)
 
 # ============================================================================ 
 # SSE Helper
@@ -95,7 +83,7 @@ class MCPManager:
         server = MCPServer(name, script_path)
         await server.start()
         self.servers[name] = server
-        logger.info(f"[OK] MCP Server '{name}' started")
+        print(f"[OK] MCP Server '{name}' started")
         return server
 
     async def call(self, server_name: str, method: str, params: dict = None):
@@ -221,70 +209,20 @@ class CodeWorker(Worker):
         )
         return {"code": response["message"]["content"]}
 
-class MemoryWorker(Worker):
+class FileWorker(Worker):
     def __init__(self):
-        # We keep the name "files" so Pydantic validation on the frontend doesn't break
-        super().__init__("files", "Persistent Vector Memory & File Operations", "llama3.2:latest")
-        self.chroma = None
-        self.collection = None
-        try:
-            import chromadb
-            # Connect to the local ChromaDB instance
-            self.chroma = chromadb.HttpClient(host='localhost', port=8000)
-            self.collection = self.chroma.get_or_create_collection("rez_hive_memory")
-            logger.info("✅ MemoryWorker connected to ChromaDB on port 8000")
-        except Exception as e:
-            logger.warning(f"⚠️ MemoryWorker running without ChromaDB: {e}")
+        super().__init__("files", "File system operations")
 
     async def process(self, task: str, model: str = None) -> dict:
-        task_lower = task.lower().strip()
-        
-        # 1. HANDLE CHROMA DB MEMORY OPERATIONS
-        if task_lower.startswith("remember"):
-            if not self.chroma:
-                return {"content": "⚠️ **ChromaDB is offline.** Cannot store memories. Start it on port 8000."}
-                
-            content = task[8:].strip()
-            if not content:
-                return {"content": "What would you like me to remember? (e.g., 'remember the server IP is 192.168.1.5')"}
-                
-            import hashlib
-            doc_id = f"mem_{hashlib.md5(content.encode()).hexdigest()[:10]}"
-            self.collection.add(documents=[content], ids=[doc_id])
-            return {"content": f"💾 **Successfully encoded into persistent memory:**\n> {content}"}
-            
-        elif task_lower.startswith("recall") or task_lower.startswith("search memory"):
-            if not self.chroma:
-                return {"content": "⚠️ **ChromaDB is offline.** Cannot recall memories."}
-                
-            query = task_lower.replace("recall", "").replace("search memory", "").strip()
-            if not query:
-                return {"content": "What would you like me to recall?"}
-                
-            results = self.collection.query(query_texts=[query], n_results=3)
-            
-            if results['documents'] and results['documents'][0]:
-                formatted = "📚 **Retrieved Context from ChromaDB:**\n\n"
-                for i, doc in enumerate(results['documents'][0], 1):
-                    formatted += f"{i}. {doc}\n"
-                return {"content": formatted}
-            else:
-                return {"content": f"No persistent memories found relating to: '{query}'"}
-
-        # 2. FALLBACK TO FILE OPERATIONS (To keep your /list_files quick command working)
-        elif task_lower == "list files" or task_lower == "/list_files":
-            import os
-            try:
-                files = os.listdir(".")[:15]
-                formatted = "**Current Directory Contents:**\n" + "\n".join(f"- `{f}`" for f in files)
-                return {"content": formatted}
-            except Exception as e:
-                return {"content": f"File error: {e}"}
-                
-        # 3. DEFAULT RESPONSE
-        return {
-            "content": "🧠 **Memory Worker Online.**\n\n**Commands:**\n- `remember[information]` - Store in ChromaDB\n- `recall [topic]` - Search vector database\n- `/list_files` - View local directory"
-        }
+        import os
+        import glob
+        task_lower = task.lower()
+        if "list" in task_lower:
+            return {"files": os.listdir(".")[:20]}
+        if "search" in task_lower:
+            pattern = task_lower.replace("search", "").strip()
+            return {"files": glob.glob(f"**/{pattern}", recursive=True)[:20]}
+        return {"message": "File operation completed"}
 
 # ============================================================================ 
 # Worker Registry
@@ -295,28 +233,21 @@ class WorkerRegistry:
 
     def register(self, worker: Worker):
         self.workers[worker.name] = worker
-        logger.info(f"[OK] Worker '{worker.name}' registered")
+        print(f"[OK] Worker '{worker.name}' registered")
 
     def get(self, name: str):
         return self.workers.get(name)
 
 # ============================================================================ 
-# PYDANTIC MODELS WITH VALIDATION
+# PYDANTIC MODELS
 # ============================================================================
 class TaskRequest(BaseModel):
-    task: str = Field(..., min_length=1, max_length=10000)
-    worker: str = Field(default="brain", pattern="^(brain|code|search|files)$")
+    task: str
+    worker: str = "brain"
     model: Optional[str] = None
     payload: Optional[Dict[str, Any]] = None
     confirmed: bool = False
     session_id: Optional[str] = None
-    
-    @validator('worker')
-    def validate_worker(cls, v):
-        valid_workers = ['brain', 'code', 'search', 'files']
-        if v not in valid_workers:
-            raise ValueError(f"Invalid worker: {v}. Must be one of {valid_workers}")
-        return v
 
 class SessionResponse(BaseModel):
     session_id: str
@@ -326,25 +257,19 @@ class ChatHistoryItem(BaseModel):
     role: str
     content: str
     timestamp: str
-    worker: Optional[str] = None
 
 class HealthCheckResponse(BaseModel):
     status: str
     workers: int
     database: str
     timestamp: str
-    drift_status: Optional[Dict[str, Any]] = None
 
 # ============================================================================ 
 # Initialize
 # ============================================================================
 setup_logging(log_level="INFO")
 
-app = FastAPI(title="REZ HIVE Kernel - Zero-Drift Sovereign AI")
-
-# Add middleware
-app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(ErrorHandlingMiddleware)
+app = FastAPI(title="REZ HIVE Kernel")
 
 # Add CORS middleware
 app.add_middleware(
@@ -355,65 +280,39 @@ app.add_middleware(
     allow_headers=["*", "X-Session-ID"],
 )
 
-# Include PS1 router for zero-drift controller
-app.include_router(ps1_router, prefix="/api/v1")
-
-# ============================================================================
-# LIFESPAN MANAGEMENT (Modern FastAPI pattern)
-# ============================================================================
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("🚀 REZ HIVE Kernel starting up...")
+# Startup and shutdown events
+@app.on_event("startup")
+async def startup():
     await init_db()
-    
-    # Start drift detector
-    asyncio.create_task(detector.start_monitoring())
-    logger.info("🛡️ Zero-Drift Detector launched")
-    
-    logger.info(f"[OK] Workers: {len(workers.workers)}")
-    logger.info(f"[OK] MCP Servers: {len(mcp_manager.servers)}")
-    logger.info("[OK] Database initialized")
-    logger.info("[OK] Authentication: JWT enabled")
-    
-    yield
-    
-    # Shutdown
-    logger.info("🛑 REZ HIVE Kernel shutting down...")
+    print("[OK] Database initialized")
+
+@app.on_event("shutdown")
+async def shutdown():
     await close_db()
+    print("[STOP] Database connection closed")
     for name, server in mcp_manager.servers.items():
         if server.process:
             server.process.terminate()
             await server.process.wait()
-            logger.info(f"[STOP] MCP Server '{name}' terminated")
-    
-    detector.running = False
-    logger.info("👋 Goodbye")
-
-# Replace the on_event decorators with lifespan
-app.router.lifespan_context = lifespan
+            print(f"[STOP] MCP Server '{name}' terminated")
 
 mcp_manager = MCPManager()
 workers = WorkerRegistry()
 workers.register(BrainWorker())
 workers.register(SearchWorker())
 workers.register(CodeWorker())
-workers.register(MemoryWorker()) # <-- Upgraded worker integration
+workers.register(FileWorker())
 
 # ============================================================================
 # CONSTITUTIONAL AI INITIALIZATION (GOVERNANCE FOUNDATION)
 # ============================================================================
-# Zero-drift constitution (new)
-zero_drift_constitution = constitution  # Already imported
-
-# Legacy constitutional components (keep for backward compatibility)
-legacy_constitution = LegacyConstitution()
+constitution = ZeroDriftConstitution()
 execution_guard = ExecutionGuard(invariant_registry)
 interception = InterceptionEngine(invariant_registry)
 audit = ConstitutionalAudit()
 
 # ============================================================================ 
-# Stream Generator with Constitutional Validation
+# Stream Generator (Updated with ChatService)
 # ============================================================================
 async def format_response_for_streaming(result: dict, worker_name: str) -> str:
     """Format worker response for nice display with syntax highlighting"""
@@ -451,7 +350,7 @@ async def format_response_for_streaming(result: dict, worker_name: str) -> str:
         import json as json_lib
         try:
             # If it's a dict with multiple fields, pretty-print as JSON
-            if len(result) > 1 or (len(result) == 1 and not any(k in result for k in['content', 'code', 'files', 'results'])):
+            if len(result) > 1 or (len(result) == 1 and not any(k in result for k in ['content', 'code', 'files', 'results'])):
                 return f"```json\n{json_lib.dumps(result, indent=2)}\n```"
         except:
             pass
@@ -459,39 +358,7 @@ async def format_response_for_streaming(result: dict, worker_name: str) -> str:
 
 async def generate_stream(task: str, worker_name: str = "brain", model: str = None, session_id: str = None, db: AsyncSession = None):
     try:
-        # CONSTITUTIONAL CHECK FIRST - ZERO-DRIFT ENFORCEMENT
-        ruling = zero_drift_constitution.validate_task(task, worker_name, session_id or "anonymous")
-        
-        # Log constitutional ruling
-        logger.info(f"Constitutional ruling for {worker_name}: {ruling['verdict']}", extra={
-            "ruling_id": ruling.get("ruling_id"),
-            "verdict": ruling["verdict"],
-            "violations": ruling["violations"]
-        })
-        
-        # Handle denied tasks
-        if ruling["verdict"] == "denied":
-            error_msg = f"⚠️ Constitutional violation: {ruling['reason']}"
-            yield sse({
-                "error": error_msg,
-                "violations": ruling["violations"],
-                "constitutional": True,
-                "ruling_id": ruling.get("ruling_id")
-            })
-            yield sse({"status": "failed"})
-            return
-        
-        # Handle tasks requiring confirmation
-        if ruling["requires_confirmation"]:
-            yield sse({
-                "warning": ruling["reason"],
-                "violations": ruling["violations"],
-                "requires_confirmation": True,
-                "ruling_id": ruling.get("ruling_id")
-            })
-            # For now, proceed (frontend would need to handle confirmation)
-        
-        yield sse({"status": "started", "worker": worker_name, "constitutional": ruling["verdict"]})
+        yield sse({"status": "started", "worker": worker_name})
         
         # Save user message if session and db available
         if session_id and db:
@@ -510,13 +377,7 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
             yield sse({"status": "failed"})
             return
         
-        # Execute worker with timeout
-        try:
-            result = await asyncio.wait_for(worker.process(task, model=model), timeout=60)
-        except asyncio.TimeoutError:
-            yield sse({"error": f"Worker '{worker_name}' timed out after 60 seconds"})
-            yield sse({"status": "failed"})
-            return
+        result = await asyncio.wait_for(worker.process(task, model=model), timeout=60)
         
         # Format response nicely
         formatted_content = await format_response_for_streaming(result, worker_name)
@@ -535,26 +396,21 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
             # Log worker execution
             worker_log_service = WorkerLogService(db)
             await worker_log_service.log_execution(
-                worker=worker_name,
+                worker_name=worker_name,
                 status="success",
-                processing_time_ms=0,  # TODO: Calculate actual time
-                input_length=len(task),
-                output_length=len(formatted_content)
+                duration_ms=0,
+                error=None
             )
         
         # Stream the formatted content
         yield sse({"content": formatted_content})
         
-        # Check for MCP fallback
         if result.get("error") and "research" in mcp_manager.servers:
             mcp_result = await mcp_manager.call("research", "search", {"query": task})
             yield sse(mcp_result)
-            
         yield sse({"status": "complete"})
-        
     except Exception as e:
-        logger.error(f"Stream error: {e}", exc_info=True)
-        yield sse({"error": f"Internal error: {str(e)}"})
+        yield sse({"error": str(e)})
         yield sse({"status": "failed"})
 
 # ============================================================================ 
@@ -562,7 +418,7 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
 # ============================================================================
 
 # Session Management
-@app.post("/auth/session", response_model=SessionResponse)
+@app.post("/auth/session")
 async def create_session(db: AsyncSession = Depends(get_db)):
     """Create a new session with JWT token"""
     session_id = create_session_id()
@@ -572,24 +428,16 @@ async def create_session(db: AsyncSession = Depends(get_db)):
     user_service = UserService(db)
     await user_service.get_or_create_user(session_id)
     
-    logger.info(f"New session created: {session_id[:8]}...")
     return SessionResponse(session_id=session_id, token=token)
 
 @app.post("/kernel/stream")
 async def kernel_stream(request: Request, db: AsyncSession = Depends(get_db)):
-    """Stream chat responses with persistence and constitutional validation"""
-    try:
-        data = await request.json()
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-    
+    """Stream chat responses with persistence"""
+    data = await request.json()
     task = data.get("task", "")
     worker = data.get("worker", "brain")
     model = data.get("model")
     session_id = data.get("session_id") or request.headers.get("X-Session-ID")
-    
-    if not task:
-        raise HTTPException(status_code=400, detail="Task cannot be empty")
     
     return StreamingResponse(
         generate_stream(task, worker, model, session_id, db),
@@ -598,20 +446,17 @@ async def kernel_stream(request: Request, db: AsyncSession = Depends(get_db)):
 
 # Chat History
 @app.get("/chat/{session_id}/history")
-async def get_chat_history(session_id: str, limit: int = 50, db: AsyncSession = Depends(get_db)):
+async def get_chat_history(session_id: str, db: AsyncSession = Depends(get_db)):
     """Retrieve chat history for a session"""
     chat_service = ChatService(db)
-    messages = await chat_service.get_chat_history(session_id, limit=min(limit, 100))
-    
+    messages = await chat_service.get_chat_history(session_id, limit=50)
     return {
         "session_id": session_id,
-        "count": len(messages),
-        "messages":[
+        "messages": [
             {
                 "role": msg.role,
                 "content": msg.content,
                 "worker": msg.worker,
-                "model": msg.model,
                 "timestamp": msg.created_at.isoformat() if msg.created_at else None
             }
             for msg in messages
@@ -622,50 +467,39 @@ async def get_chat_history(session_id: str, limit: int = 50, db: AsyncSession = 
 async def clear_chat_history(session_id: str, db: AsyncSession = Depends(get_db)):
     """Clear chat history for a session"""
     chat_service = ChatService(db)
-    count = await chat_service.clear_session_chat(session_id)
-    return {"message": f"Chat history cleared ({count} messages)", "session_id": session_id}
+    await chat_service.clear_session_chat(session_id)
+    return {"message": "Chat history cleared", "session_id": session_id}
 
 # Health & Monitoring
 @app.get("/health")
 async def health_check(db: AsyncSession = Depends(get_db)):
-    """Service health check with drift status"""
+    """Service health check"""
     health_service = HealthCheckService(db)
     await health_service.log_health_check(
         service="kernel",
         status="healthy"
     )
-    
-    # Get drift report
-    drift_report = detector.get_drift_report() if hasattr(detector, 'get_drift_report') else None
-    
     return HealthCheckResponse(
         status="healthy",
         workers=len(workers.workers),
         database="connected",
-        timestamp=datetime.utcnow().isoformat(),
-        drift_status=drift_report
+        timestamp=str(asyncio.get_event_loop().time())
     )
 
 @app.get("/worker/{worker_name}/stats")
-async def get_worker_stats(worker_name: str, hours: int = 24, db: AsyncSession = Depends(get_db)):
+async def get_worker_stats(worker_name: str, db: AsyncSession = Depends(get_db)):
     """Get worker execution statistics"""
-    worker = workers.get(worker_name)
-    if not worker:
-        raise HTTPException(status_code=404, detail=f"Worker '{worker_name}' not found")
-    
     worker_log_service = WorkerLogService(db)
-    stats = await worker_log_service.get_worker_stats(worker_name, hours=hours)
-    
+    stats = await worker_log_service.get_worker_stats(worker_name, hours=24)
     return {
         "worker": worker_name,
-        "description": worker.description,
         "stats": stats
     }
 
 @app.get("/workers")
 async def list_workers():
     """List available workers"""
-    workers_info =[]
+    workers_info = []
     for name, worker in workers.workers.items():
         workers_info.append({
             "name": name,
@@ -673,7 +507,7 @@ async def list_workers():
             "model": worker.model or "unknown",
             "status": "available"
         })
-    return {"workers": workers_info, "count": len(workers_info)}
+    return {"workers": workers_info}
 
 @app.get("/worker/{worker_name}/health")
 async def worker_health(worker_name: str):
@@ -682,32 +516,18 @@ async def worker_health(worker_name: str):
     if not worker:
         raise HTTPException(status_code=404, detail=f"Worker '{worker_name}' not found")
     
-    # Simple health check - try a ping
-    try:
-        if worker_name == "brain":
-            # Test Ollama connection
-            test = await asyncio.wait_for(worker.process("ping", timeout=5), timeout=5)
-            healthy = "error" not in test
-        else:
-            healthy = True
-    except:
-        healthy = False
-    
     return {
         "worker": worker_name,
-        "status": "healthy" if healthy else "degraded",
+        "status": "healthy",
         "description": worker.description,
         "model": worker.model or "unknown",
-        "ready": healthy
+        "ready": True
     }
 
 @app.get("/mcp/servers")
 async def list_mcp_servers():
     """List available MCP servers"""
-    return {
-        "servers": list(mcp_manager.servers.keys()),
-        "count": len(mcp_manager.servers)
-    }
+    return {"servers": list(mcp_manager.servers.keys())}
 
 # ============================================================================ 
 # Admin/Operational Endpoints (PS1-Style Controller)
@@ -718,24 +538,17 @@ async def kill_port_endpoint(port: int = 8001):
     """Kill processes using a specific port (Windows/Linux compatible)"""
     try:
         killed = False
-        killed_pids =[]
         
         # Try to find and kill process using the port
         try:
             for conn in psutil.net_connections():
-                if hasattr(conn, 'laddr') and conn.laddr.port == port and conn.pid:
+                if conn.laddr.port == port and conn.pid:
                     proc = psutil.Process(conn.pid)
                     proc.terminate()
-                    try:
-                        proc.wait(timeout=3)
-                    except psutil.TimeoutExpired:
-                        proc.kill()
+                    proc.wait(timeout=3)
                     killed = True
-                    killed_pids.append(conn.pid)
-                    logger.info(f"[OK] Killed process {conn.pid} on port {port}")
-        except Exception as e:
-            logger.warning(f"psutil method failed: {e}")
-            
+                    print(f"[OK] Killed process {conn.pid} on port {port}")
+        except:
             # Fallback: Try Windows-specific command
             import platform
             if platform.system() == "Windows":
@@ -749,39 +562,22 @@ async def kill_port_endpoint(port: int = 8001):
                 if result.stdout:
                     lines = result.stdout.strip().split("\n")
                     for line in lines:
-                        if 'LISTENING' in line:
-                            parts = line.split()
-                            if parts:
-                                pid = int(parts[-1])
-                                try:
-                                    os.kill(pid, signal.SIGTERM)
-                                    killed = True
-                                    killed_pids.append(pid)
-                                    logger.info(f"[OK] Killed process {pid} on port {port}")
-                                except:
-                                    pass
+                        parts = line.split()
+                        if parts:
+                            pid = int(parts[-1])
+                            os.kill(pid, signal.SIGTERM)
+                            killed = True
+                            print(f"[OK] Killed process {pid} on port {port}")
         
         if killed:
             await asyncio.sleep(1)  # Give it time to actually die
-            return {
-                "status": "success",
-                "message": f"Freed port {port}",
-                "killed_pids": killed_pids
-            }
+            return {"status": "success", "message": f"Port {port} freed"}
         else:
-            return {
-                "status": "not_found",
-                "message": f"No process found on port {port}",
-                "killed_pids":[]
-            }
+            return {"status": "not_found", "message": f"No process found on port {port}"}
     
     except Exception as e:
-        logger.error(f"Error killing port {port}: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "killed_pids":[]
-        }
+        print(f"[WARN] Error killing port {port}: {str(e)}")
+        return {"status": "error", "message": str(e)}
 
 @app.post("/admin/launch-all")
 async def launch_all_services():
@@ -820,21 +616,16 @@ async def launch_all_services():
             status_str = "✅ Running" if running else "❌ Not Running"
             message += f"  {service}: {status_str}\n"
         
-        logger.info(message)
+        print(f"[INFO] {message}")
         
         return {
-            "status": "check_complete",
+            "status": "check",
             "message": "Use launcher.bat to start all services from terminal",
-            "services": services_status,
-            "commands":[
-                "cd backend && python kernel.py",
-                "chroma run --path ./chroma_data --port 8000",
-                "npm run dev"
-            ]
+            "services": services_status
         }
     
     except Exception as e:
-        logger.error(f"Launch check error: {e}")
+        print(f"[WARN] Launch check error: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 @app.get("/status")
@@ -844,12 +635,11 @@ async def status():
         "workers": len(workers.workers),
         "mcp_servers": len(mcp_manager.servers),
         "status": "running",
-        "drift_protection": "active"
     }
 
 @app.post("/api/kernel")
 async def kernel_compatibility_endpoint(req: TaskRequest, db: AsyncSession = Depends(get_db)):
-    """Legacy compatibility endpoint for older clients"""
+    """Legacy compatibility endpoint"""
     return StreamingResponse(
         generate_stream(req.task, req.worker, req.model, req.session_id, db),
         media_type="text/event-stream"
@@ -859,18 +649,15 @@ async def kernel_compatibility_endpoint(req: TaskRequest, db: AsyncSession = Dep
 # Main
 # ============================================================================
 if __name__ == "__main__":
-    print("=" * 60)
-    print("🏛️  REZ HIVE KERNEL - Zero-Drift Sovereign AI")
-    print("=" * 60)
+    print("=")
+    print("REZ HIVE KERNEL - Phase 1 Enhanced")
+    print("=")
     print(f"[OK] Workers: {len(workers.workers)}")
     print(f"[OK] MCP Servers: {len(mcp_manager.servers)}")
-    print(f"[OK] Database: SQLite with connection pooling")
-    print(f"[OK] Logging: Structured JSON")
+    print(f"[OK] Database: Initializing on startup")
+    print(f"[OK] Logging: Structured JSON format")
     print(f"[OK] Authentication: JWT enabled")
-    print(f"[OK] Constitutional AI: 9 Articles active")
-    print(f"[OK] Zero-Drift Detector: Active")
-    print("=" * 60)
-    
+    print("=")
     # Try port 8001, if in use try 8002
     import socket
     port = 8001
@@ -885,9 +672,4 @@ if __name__ == "__main__":
             print(f"[WARN] Port 8001 in use, trying {port}")
     except:
         pass
-    
-    print(f"🌐 API: http://localhost:{port}")
-    print(f"📊 Docs: http://localhost:{port}/docs")
-    print("=" * 60)
-    
     uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,0 +1,24 @@
+﻿{
+  "genesis_block": {
+    "timestamp": "2026-03-06T08:39:44Z",
+    "version": "1.0.0-RC",
+    "constitution_version": "1.0.0",
+    "drift_events": 0,
+    "stability_quotient": 100
+  },
+  "precedents": {},
+  "constitutional_rulings": [],
+  "system_state": {
+    "workers": ["brain", "eyes", "hands", "memory"],
+    "services": {
+      "kernel": "healthy",
+      "chroma": "healthy",
+      "ollama": "healthy",
+      "nextjs": "healthy"
+    },
+    "drift_count": 0,
+    "last_audit": "2026-03-06T08:39:44Z"
+  },
+  "merkle_root": "0x7F3A9C1F4B2D8E6A5C7D9E0F1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B",
+  "sovereign_oath": "I acknowledge the flame, I anchor the truth, I own the output."
+}

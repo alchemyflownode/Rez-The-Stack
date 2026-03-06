@@ -1,761 +1,572 @@
-﻿"use client";
+// src/app/page.tsx
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CodeBlock } from '@/components/CodeBlock';
+import { LoadingIndicator } from '@/components/LoadingIndicator';
+import { RezHiveController } from '@/components/RezHiveController';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { 
-  Brain, Eye, Hand, Database, Cpu, Zap, Activity, Network,
-  Clock, Menu, ChevronRight, HelpCircle, Mic, MicOff, Trash2, ChevronDown, X
-} from 'lucide-react';
 
-// --- Types ---
-
-interface SystemMetric {
-  name: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-  unit: string;
-  history: number[];
+// ============================================================================
+// Types
+// ============================================================================
+interface Message {
+  id: string; role: 'user' | 'ai' | 'system'; content: string; timestamp: string; worker?: string; model?: string; metadata?: any;
 }
+interface SessionUsage { current: number; weekly: number; total: number; }
+interface ServiceStatus { kernel: boolean; chroma: boolean; nextjs: boolean; }
+interface WorkerInfo { id: string; name: string; icon: any; description: string; model?: string; }
 
-interface CommandItem {
-  cmd: string;
-  icon: string;
-  desc: string;
-  value: string;
-  payload?: Record<string, any>;
-}
+// ============================================================================
+// Constants
+// ============================================================================
+const API_BASE = "http://localhost:8001";
+const API_URL = `${API_BASE}/kernel/stream`;
+const MAX_SESSION_MESSAGES = 100;
+const MAX_WEEKLY_MESSAGES = 500;
 
-type CommandCategory = 'system' | 'apps' | 'search' | 'code' | 'memory' | 'files';
-
-interface ChatMessage {
-  id: string;
-  role: 'ai' | 'user';
-  content: string;
-  timestamp: string;
-}
-
-interface WorkerStatus {
-  name: string;
-  icon: React.ReactNode;
-  active: boolean;
-  model?: string;
-}
-
-interface ServicesStatus {
-  ollama: boolean;
-  chroma: boolean;
-  kernel: boolean;
-}
-
-// --- Components ---
-
-const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
-  if (!data || data.length < 2) return <div className="h-4 w-10" />;
-  
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data, 0);
-  const range = max - min || 1;
-  const width = 40;
-  const height = 16;
-  
-  const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((v - min) / range) * height;
-    return `${x},${y}`;
-  }).join(' ');
-  
-  return (
-    <svg width={width} height={height} className="opacity-60">
-      <polyline fill="none" stroke={color} strokeWidth="1.5" points={points} />
-    </svg>
-  );
+const generateId = () => Math.random().toString(36).substring(2, 15);
+const getTime = () => new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+const getTimeUntilReset = () => {
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setHours(now.getHours() + 1, 0, 0, 0);
+  const diff = nextHour.getTime() - now.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const seconds = Math.floor((diff % 60000) / 1000);
+  return `${minutes}m ${seconds}s`;
 };
 
-const CodeBlock = ({ language, code }: { language: string; code: string }) => {
-  const [copied, setCopied] = useState(false);
-  
-  const copy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  
+// ============================================================================
+// Icons (Merged Set)
+// ============================================================================
+const Icons = {
+  Brain: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>,
+  Eye: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>,
+  Hand: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v4"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V2.5a2 2 0 0 0-4 0v11.5"/><path d="M6 14v-1a2 2 0 0 0-4 0v5a7 7 0 0 0 7 7h3a7 7 0 0 0 7-7v-5a2 2 0 0 0-4 0v1"/></svg>,
+  Database: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>,
+  Command: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
+  Zap: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+  Activity: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+  Cpu: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>,
+  HardDrive: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>,
+  Terminal: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
+  Shield: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  Settings: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+};
+
+// ============================================================================
+// Premium Markdown Renderer (from Neural UI)
+// ============================================================================
+const MessageContent = ({ content }: { content: string }) => {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopy = useCallback(async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {}
+  },[]);
+
   return (
-    <div className="relative group my-2 rounded-lg overflow-hidden bg-black/50 border border-white/10">
-      <div className="flex items-center justify-between px-3 py-2 bg-white/5 border-b border-white/10">
-        <span className="text-xs text-white/50 font-mono">{language}</span>
-        <button 
-          onClick={copy}
-          className="text-xs text-white/30 hover:text-white/60 transition-colors"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <pre className="p-3 overflow-x-auto text-xs font-mono text-white/80">
-        <code>{code}</code>
-      </pre>
+    <div className="prose prose-invert max-w-none prose-p:text-[#B4BBC5] prose-p:leading-relaxed prose-headings:text-[#00E5FF] prose-headings:font-medium prose-a:text-[#00E5FF] prose-li:text-[#B4BBC5]">
+      <ReactMarkdown
+        components={{
+          code({ node, inline, className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || '');
+            const language = match ? match[1] : 'text';
+            const codeString = String(children).replace(/\n$/, '');
+            const isCopied = copiedCode === codeString;
+
+            if (!inline) {
+              return (
+                <div className="my-5 relative group border border-[#2A2E38] rounded-xl overflow-hidden bg-[#0B0C10]">
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#1A1D24] border-b border-[#2A2E38]">
+                    <span className="text-[10px] text-[#00E5FF] font-mono uppercase tracking-widest flex items-center gap-2">
+                      <Icons.Command /> {language}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(codeString)}
+                      className={`text-[10px] px-3 py-1 rounded-md transition-all font-mono uppercase tracking-wider ${
+                        isCopied ? 'bg-[#00E676]/20 text-[#00E676] border border-[#00E676]/30' : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10 border border-transparent'
+                      }`}
+                    >
+                      {isCopied ? 'COPIED' : 'COPY CODE'}
+                    </button>
+                  </div>
+                  <div className="p-4 overflow-x-auto text-[13px] font-mono leading-relaxed custom-scrollbar">
+                    <CodeBlock language={language} code={codeString} />
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <code className="bg-[#1A1D24] text-[#00E5FF] px-1.5 py-0.5 rounded font-mono text-[13px] border border-[#2A2E38]" {...props}>
+                {children}
+              </code>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };
 
-const TwoBarMeter = ({ 
-  sessionPercent, 
-  weeklyPercent, 
-  resetTime 
-}: { 
-  sessionPercent: number; 
-  weeklyPercent: number; 
-  resetTime: number;
-}) => {
-  const [timeLeft, setTimeLeft] = useState(resetTime - Date.now());
-  
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(resetTime - Date.now());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resetTime]);
-  
-  const formatTime = (ms: number) => {
-    if (ms < 0) return "0h 0m";
-    const hours = Math.floor(ms / 3600000);
-    const mins = Math.floor((ms % 3600000) / 60000);
-    return `${hours}h ${mins}m`;
-  };
-  
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs">
-          <span className="text-white/40">Session</span>
-          <span className="text-white/60">{Math.round(sessionPercent)}%</span>
-        </div>
-        <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${sessionPercent}%` }} />
-        </div>
-      </div>
-      
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs">
-          <span className="text-white/40">Weekly</span>
-          <span className="text-white/60">{Math.round(weeklyPercent)}%</span>
-        </div>
-        <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-purple-400 rounded-full" style={{ width: `${weeklyPercent}%` }} />
-        </div>
-      </div>
-      
-      <div className="text-xs text-white/30 text-center">
-        Resets in {formatTime(timeLeft)}
-      </div>
-    </div>
-  );
-};
-
+// ============================================================================
+// Main Application (The Ultimate Merge)
+// ============================================================================
 export default function SovereignDashboard() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [activeWorker, setActiveWorker] = useState('Brain');
-  const [activeCategory, setActiveCategory] = useState<CommandCategory>('system');
-  const [showCommands, setShowCommands] = useState(true);
+  const [chatLog, setChatLog] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [timestamp, setTimestamp] = useState('');
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>("llama3.2:latest");
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-  const [recentCommands, setRecentCommands] = useState<any[]>([]);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState('brain');
+  const[selectedModel, setSelectedModel] = useState('llama3.2');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [services, setServices] = useState<ServiceStatus>({ kernel: false, chroma: false, nextjs: true });
+  const [timeUntilReset, setTimeUntilReset] = useState('');
   
-  const [services, setServices] = useState<ServicesStatus>({
-    ollama: false,
-    chroma: false,
-    kernel: false
-  });
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const [metrics, setMetrics] = useState<SystemMetric[]>([
-    { name: 'CPU', value: 12.4, icon: <Cpu size={14} />, color: '#34d399', unit: '%', history: [10,15,12,18,14,11,13] },
-    { name: 'RAM', value: 31.2, icon: <Database size={14} />, color: '#60a5fa', unit: '%', history: [28,32,30,35,33,31,29] },
-    { name: 'GPU', value: 3.5, icon: <Zap size={14} />, color: '#c084fc', unit: '%', history: [2,4,3,5,3,2,4] },
-    { name: 'NET', value: 8.7, icon: <Network size={14} />, color: '#fbbf24', unit: 'MB/s', history: [7,9,8,10,8,7,9] }
-  ]);
-
-  const [quotas, setQuotas] = useState({
-    session: { used: 12, total: 100 },
-    weekly: { used: 187, total: 800 }
-  });
-
-  const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
-
-  const WELCOME_MESSAGE = "Welcome to REZ HIVE! 👋\n\nI'm your sovereign AI coworker.\n\nChat naturally • Remember context • Run commands\nTry: \"What can you help me with?\"";
-
-  const WORKERS: WorkerStatus[] = [
-    { name: 'Brain', icon: <Brain size={16} />, active: true },
-    { name: 'Eyes', icon: <Eye size={16} />, active: false },
-    { name: 'Hands', icon: <Hand size={16} />, active: false },
-    { name: 'Memory', icon: <Database size={16} />, active: true }
+  const workers: WorkerInfo[] =[
+    { id: 'brain', name: 'Brain Worker', icon: <Icons.Brain />, description: 'Cognitive Reasoning', model: 'llama3.2' },
+    { id: 'search', name: 'Eyes Worker', icon: <Icons.Eye />, description: 'Network Analysis' },
+    { id: 'code', name: 'Hands Worker', icon: <Icons.Hand />, description: 'Syntax Generation', model: 'qwen2.5-coder:14b' },
+    { id: 'files', name: 'Memory Worker', icon: <Icons.Database />, description: 'Context Retrieval' },
   ];
 
-  const SOVEREIGN_COMMANDS: Record<CommandCategory, CommandItem[]> = {
-    system: [
-      { cmd: 'Check CPU', icon: '⚡', desc: 'Check CPU usage', value: 'cpu' },
-      { cmd: 'Health check', icon: '🩺', desc: 'Run health check', value: 'health' }
-    ],
-    apps: [
-      { cmd: 'List apps', icon: '📱', desc: 'List installed apps', value: 'apps' }
-    ],
-    search: [
-      { cmd: 'Search web', icon: '🔍', desc: 'Search the web', value: 'search' }
-    ],
-    code: [
-      { cmd: 'Generate code', icon: '💻', desc: 'Generate code', value: 'code' }
-    ],
-    memory: [
-      { cmd: 'Recall', icon: '🧠', desc: 'Recall context', value: 'recall' }
-    ],
-    files: [
-      { cmd: 'List files', icon: '📁', desc: 'List files', value: 'files' }
-    ]
-  };
-
-  const getTime = () => {
-    const d = new Date();
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  };
-
-  const generateId = () => Math.random().toString(36).substring(2, 9);
-
-  const checkServices = useCallback(async () => {
-    try {
-      const res = await fetch('/api/status');
-      if (res.ok) {
-        const data = await res.json();
-        setServices(data);
-      }
-    } catch (e) {
-      console.error('Status check failed', e);
-    }
-  }, []);
-
-  const fetchModels = async () => {
-    try {
-      const res = await fetch('/api/ollama/models');
-      const data = await res.json();
-      if (data.models) {
-        setAvailableModels(data.models);
-        if (data.default && !selectedModel) {
-          setSelectedModel(data.default);
+  // ===== EFFECTS =====
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const existingSession = localStorage.getItem('rez_session_id');
+        if (existingSession) {
+          setSessionId(existingSession);
+          try {
+            const response = await fetch(`${API_BASE}/chat/${existingSession}/history`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.messages && data.messages.length > 0) {
+                setChatLog(data.messages.map((msg: any) => ({
+                  id: generateId(), role: msg.role, content: msg.content, timestamp: msg.timestamp || getTime(), worker: msg.worker,
+                })));
+              }
+            }
+          } catch (e) {}
+          return;
         }
+
+        const response = await fetch(`${API_BASE}/auth/session`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        if (response.ok) {
+          const data = await response.json();
+          setSessionId(data.session_id);
+          localStorage.setItem('rez_session_id', data.session_id);
+          if (data.token) localStorage.setItem('rez_token', data.token);
+        }
+      } catch (error) {
+        const fallbackId = `local-${generateId()}`;
+        setSessionId(fallbackId);
+        localStorage.setItem('rez_session_id', fallbackId);
       }
-    } catch (e) {
-      console.error('Failed to fetch models', e);
-      setAvailableModels(['llama3.2:latest', 'phi3.5:3.8b', 'qwen2.5-coder:14b']);
-    }
-  };
-
-  const clearChat = () => {
-    setChatLog([{ 
-      id: generateId(), 
-      role: 'ai', 
-      content: WELCOME_MESSAGE, 
-      timestamp: getTime() 
-    }]);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem('rez_hive_chat_v2');
-    }
-  };
-
-  const executeAction = async (commandText: string, payload?: Record<string, any>) => {
-    if (!commandText.trim() || loading) return;
-    
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      role: 'user',
-      content: commandText,
-      timestamp: getTime()
     };
-    
-    setChatLog(prev => [...prev, userMessage]);
+    initSession();
+  },[]);
+
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatLog]);
+
+  useEffect(() => {
+    setTimeUntilReset(getTimeUntilReset());
+    const interval = setInterval(() => setTimeUntilReset(getTimeUntilReset()), 1000);
+    return () => clearInterval(interval);
+  },[]);
+
+  useEffect(() => {
+    const checkServices = async () => {
+      try {
+        const kernel = await fetch(`${API_BASE}/health`, { method: 'GET', signal: AbortSignal.timeout(5000) });
+        setServices(prev => ({ ...prev, kernel: kernel.ok }));
+      } catch { setServices(prev => ({ ...prev, kernel: false })); }
+      try {
+        const chroma = await fetch('http://localhost:8000/api/v1/heartbeat', { method: 'GET', signal: AbortSignal.timeout(3000) });
+        setServices(prev => ({ ...prev, chroma: chroma.ok }));
+      } catch { setServices(prev => ({ ...prev, chroma: false })); }
+    };
+    checkServices();
+    const interval = setInterval(checkServices, 10000);
+    return () => clearInterval(interval);
+  },[]);
+
+  // ===== HANDLERS (Actual SSE Logic Restored) =====
+  const sendMessage = useCallback(async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { id: generateId(), role: 'user', content: input, timestamp: getTime(), worker: selectedWorker };
+    setChatLog(prev =>[...prev, userMessage]);
+    const currentInput = input;
     setInput('');
-    setLoading(true);
-    
+    setIsLoading(true);
+
     const aiMessageId = generateId();
-    setChatLog(prev => [...prev, { 
-      id: aiMessageId, 
-      role: 'ai', 
-      content: '', 
-      timestamp: getTime() 
-    }]);
-    
-    abortControllerRef.current = new AbortController();
-    
+    setChatLog(prev =>[...prev, { id: aiMessageId, role: 'ai', content: '', timestamp: getTime(), worker: selectedWorker, model: selectedModel }]);
+
     try {
-      const response = await fetch('/api/kernel', {
+      const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          task: commandText, 
-          worker: activeWorker.toLowerCase(), 
-          model: selectedModel,
-          ...payload 
-        }),
-        signal: abortControllerRef.current.signal
+        headers: { 'Content-Type': 'application/json', 'X-Session-ID': sessionId || 'anonymous' },
+        body: JSON.stringify({ task: currentInput, worker: selectedWorker, model: selectedModel, session_id: sessionId || 'anonymous' }),
       });
-      
-      if (!response.ok) throw new Error('API error');
-      
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) errorMessage = errorData.error;
+        } catch {}
+        setChatLog(prev => prev.map(msg => msg.id === aiMessageId ? { ...msg, content: `**SYSTEM ERROR**: ${errorMessage}`, role: 'system' } : msg));
+        setIsLoading(false);
+        return;
+      }
+
       const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
       const decoder = new TextDecoder();
-      
       let accumulated = '';
-      
-      while (reader) {
+      let buffer = '';
+
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
-        const chunk = decoder.decode(value);
-        accumulated += chunk;
-        
-        setChatLog(prev => 
-          prev.map(msg => 
-            msg.id === aiMessageId 
-              ? { ...msg, content: accumulated } 
-              : msg
-          )
-        );
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.error) {
+                setChatLog(prev => prev.map(msg => msg.id === aiMessageId ? { ...msg, content: `**SYSTEM ERROR**: ${data.error}`, role: 'system' } : msg));
+                setIsLoading(false);
+                return;
+              }
+              if (data.content) {
+                accumulated += data.content;
+                setChatLog(prev => prev.map(msg => msg.id === aiMessageId ? { ...msg, content: accumulated } : msg));
+              }
+            } catch (e) { console.error('Error parsing SSE:', e); }
+          }
+        }
       }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        setChatLog(prev => 
-          prev.map(msg => 
-            msg.id === aiMessageId 
-              ? { ...msg, content: '⚠️ Error: Failed to fetch' } 
-              : msg
-          )
-        );
-      }
+    } catch (error) {
+      setChatLog(prev => prev.map(msg => msg.id === aiMessageId ? { ...msg, content: `**CONNECTION OFFLINE**: Ensure kernel is running on port 8001.`, role: 'system' } : msg));
     } finally {
-      setLoading(false);
-      abortControllerRef.current = null;
+      setIsLoading(false);
+      inputRef.current?.focus();
     }
+  }, [input, isLoading, selectedWorker, selectedModel, sessionId]);
+
+  const insertQuickCommand = (cmd: string) => {
+    setInput(cmd);
+    inputRef.current?.focus();
   };
 
-  const startListening = () => {
-    setIsListening(!isListening);
-  };
-
-  // Load data and setup intervals
-  useEffect(() => {
-    checkServices();
-    fetchModels();
-    
-    // Load saved chat
-    try {
-      if (typeof window !== "undefined") {
-        const savedChat = localStorage.getItem('rez_hive_chat_v2');
-        if (savedChat) {
-          setChatLog(JSON.parse(savedChat));
-        } else {
-          setChatLog([{ 
-            id: generateId(), 
-            role: 'ai', 
-            content: WELCOME_MESSAGE, 
-            timestamp: getTime() 
-          }]);
-        }
-        
-        const saved = localStorage.getItem('sovereign_recent');
-        if (saved) {
-          setRecentCommands(JSON.parse(saved));
-        }
-      }
-    } catch (e) {
-      console.error("Load error", e);
-    }
-
-    // Set up intervals
-    const interval = setInterval(checkServices, 15000);
-    setTimestamp(getTime());
-    
-    const timer = setInterval(() => {
-      setTimestamp(getTime());
-      
-      setMetrics(prev => prev.map(m => {
-        const variation = (Math.random() - 0.5) * 10;
-        const newVal = Math.max(0, Math.min(100, m.value + variation));
-        return { 
-          ...m, 
-          value: newVal, 
-          history: [...m.history.slice(1), newVal]
-        };
-      }));
-      
-      setQuotas(prev => ({
-        session: { ...prev.session, used: Math.floor(Math.random() * 80) },
-        weekly: { ...prev.weekly, used: Math.floor(Math.random() * 500) }
-      }));
-    }, 4000);
-
-    return () => {
-      clearInterval(timer);
-      clearInterval(interval);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [checkServices]);
-
-  // Persist chat
-  useEffect(() => {
-    if (chatLog.length > 0) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem('rez_hive_chat_v2', JSON.stringify(chatLog));
-      }
-    }
-  }, [chatLog]);
-
-  // Persist recent commands
-  useEffect(() => {
-    if (recentCommands.length > 0) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem('sovereign_recent', JSON.stringify(recentCommands));
-      }
-    }
-  }, [recentCommands]);
-
-  // Auto-scroll
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatLog]);
+  const activeWorkerInfo = workers.find(w => w.id === selectedWorker) || workers[0];
 
   return (
-    <div className="min-h-screen bg-[#030405] text-white font-sans selection:bg-cyan-500/30">
-      {/* Top Bar */}
-      <header className="fixed top-0 left-0 right-0 h-12 bg-black/50 backdrop-blur-md border-b border-white/5 flex items-center px-4 z-30">
-        <button 
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)} 
-          className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-        >
-          <Menu size={18} className="text-white/40" />
-        </button>
-        
-        <div className="ml-4 flex items-center gap-3">
-          <span className="text-sm font-medium bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            REZ HIVE
-          </span>
-          <span className="text-xs px-2 py-0.5 bg-green-500/10 text-green-400 rounded-full border border-green-500/20 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            LIVE
-          </span>
+    <div className="h-screen w-screen bg-[#050505] text-[#D1D5DB] flex overflow-hidden font-sans selection:bg-[#00E5FF]/30">
+      
+      {/* ========================================== */}
+      {/* LEFT SIDEBAR (Original + Directives)       */}
+      {/* ========================================== */}
+      <aside className="w-[260px] flex flex-col bg-[#050505] border-r border-[#1F222A] z-10 flex-shrink-0">
+        <div className="h-16 flex items-center px-6 gap-3 border-b border-[#1F222A]">
+          <div className="w-8 h-8 rounded bg-[#00E5FF] flex items-center justify-center text-black">
+            <Icons.Zap />
+          </div>
+          <h1 className="text-xl font-bold text-white tracking-wide">REZ HIVE</h1>
         </div>
-        
-        <div className="flex items-center gap-3 ml-6">
-          <div className="flex items-center gap-1.5">
-            <span className={`w-2 h-2 rounded-full ${services.ollama ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className="text-xs text-white/30">Brain</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className={`w-2 h-2 rounded-full ${services.chroma ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className="text-xs text-white/30">Memory</span>
-          </div>
-          
-          {/* Model Selector Dropdown */}
-          <div className="relative ml-2">
-            <button
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
-              className="flex items-center gap-1 px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-white/60 border border-white/10"
-            >
-              <span className="truncate max-w-[80px]">{selectedModel.split(':')[0]}</span>
-              <ChevronDown size={14} />
-            </button>
-            
-            {showModelDropdown && (
-              <div className="absolute top-full mt-1 left-0 bg-black/90 border border-white/10 rounded-lg py-1 z-50 max-h-60 overflow-y-auto min-w-[160px]">
-                {availableModels.map((model) => (
+
+        <div className="flex-1 py-4 px-3 space-y-6 overflow-y-auto custom-scrollbar">
+          {/* Active Protocols */}
+          <div>
+            <h2 className="text-[10px] font-mono text-[#8A8F9B] uppercase tracking-widest mb-3 px-3">Active Protocols</h2>
+            <div className="space-y-1">
+              {workers.map(worker => {
+                const isActive = selectedWorker === worker.id;
+                return (
                   <button
-                    key={model}
-                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/10 ${
-                      model === selectedModel ? 'text-cyan-400 bg-cyan-500/10' : 'text-white/60'
+                    key={worker.id}
+                    onClick={() => { setSelectedWorker(worker.id); if (worker.model) setSelectedModel(worker.model); }}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all relative group ${
+                      isActive ? 'bg-[#1A1D24] text-white' : 'text-[#8A8F9B] hover:bg-[#111318] hover:text-white'
                     }`}
-                    onClick={() => {
-                      setSelectedModel(model);
-                      setShowModelDropdown(false);
-                    }}
                   >
-                    {model}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex-1" />
-        
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={clearChat} 
-            className="p-2 hover:bg-white/5 rounded-lg text-white/40 hover:text-red-400 transition-colors" 
-            title="Clear Chat"
-          >
-            <Trash2 size={16} />
-          </button>
-          <span className="text-xs text-white/30 font-mono tabular-nums">{timestamp}</span>
-          <button 
-            onClick={() => setShowHelp(!showHelp)} 
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-          >
-            <HelpCircle size={16} className="text-white/40" />
-          </button>
-        </div>
-      </header>
-
-      {/* Metrics Bar */}
-      <div className="fixed top-12 left-0 right-0 h-14 bg-black/30 backdrop-blur-sm border-b border-white/5 flex items-center px-4 z-20">
-        <div className="flex gap-6 overflow-x-auto no-scrollbar">
-          {metrics.map((metric) => (
-            <div key={metric.name} className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-white/40">{metric.icon}</span>
-              <div className="flex flex-col min-w-[80px]">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-white/60">{metric.name}</span>
-                  <span className="text-sm font-mono tabular-nums" style={{ color: metric.color }}>
-                    {metric.value.toFixed(1)}{metric.unit}
-                  </span>
-                </div>
-                <Sparkline data={metric.history} color={metric.color} />
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="flex-1" />
-        
-        <div className="flex items-center gap-3 text-xs flex-shrink-0">
-          <span className="text-white/30">Active: <span className="text-white/60">{activeWorker}</span></span>
-          <span className="w-1 h-1 rounded-full bg-green-400/50" />
-          <span className="text-white/30">30+ models</span>
-        </div>
-      </div>
-
-      <div className="pt-[104px] flex h-screen">
-        {/* Sidebar */}
-        <nav className={`transition-all duration-300 flex-shrink-0 ${sidebarCollapsed ? 'w-16' : 'w-48'} border-r border-white/5 bg-black/20 backdrop-blur-sm`}>
-          <div className="p-3 space-y-1">
-            {WORKERS.map((worker) => (
-              <button
-                key={worker.name}
-                onClick={() => setActiveWorker(worker.name)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                  activeWorker === worker.name 
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
-                    : 'hover:bg-white/5 text-white/40 hover:text-white/60'
-                }`}
-              >
-                <span className={sidebarCollapsed ? 'mx-auto' : ''}>{worker.icon}</span>
-                {!sidebarCollapsed && (
-                  <>
-                    <span className="text-sm flex-1 text-left">{worker.name}</span>
-                    {worker.active && <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />}
-                  </>
-                )}
-              </button>
-            ))}
-          </div>
-        </nav>
-
-        {/* Main Chat Area */}
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          <div className="flex-1 overflow-y-auto p-4 pb-40">
-            <div className="max-w-3xl mx-auto space-y-6">
-              {chatLog.map((msg) => (
-                <div 
-                  key={msg.id} 
-                  className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm ${
-                    msg.role === 'ai' 
-                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
-                      : 'bg-white/10 text-white'
-                  }`}>
-                    {msg.role === 'ai' ? '🤖' : 'U'}
-                  </div>
-                  
-                  <div className={`max-w-[85%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                    <div className="text-xs text-white/20 mb-1 font-mono">{msg.timestamp}</div>
-                    
-                    <div className={`text-sm rounded-2xl p-4 ${
-                      msg.role === 'ai' 
-                        ? 'bg-white/5 border border-white/5' 
-                        : 'bg-cyan-500/10 border border-cyan-500/20'
-                    }`}>
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]} 
-                        className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-transparent prose-pre:p-0"
-                        components={{
-                          code({ node, inline, className, children, ...props }: any) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline && match ? (
-                              <CodeBlock language={match[1]} code={String(children).replace(/\n$/, '')} />
-                            ) : (
-                              <code className="bg-black/30 px-1.5 py-0.5 rounded text-cyan-300 text-xs" {...props}>
-                                {children}
-                              </code>
-                            );
-                          }
-                        }}
-                      >
-                        {msg.content || (loading && msg.role === 'ai' ? '⏳ Thinking...' : '')}
-                      </ReactMarkdown>
+                    <div className={`${isActive ? 'text-[#00E5FF]' : 'text-inherit group-hover:text-[#00E5FF]'}`}>{worker.icon}</div>
+                    <div className="text-left flex-1">
+                      <div className="font-medium text-sm">{worker.name}</div>
+                      <div className="text-[10px] opacity-60 font-mono mt-0.5">{worker.description}</div>
                     </div>
-                  </div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
+                    {isActive && <div className="absolute right-3 w-1 h-4 bg-[#00E5FF] rounded-full shadow-[0_0_8px_#00E5FF]" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Input Area */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/95 to-transparent pt-8 pb-6 px-4">
-            <div className="max-w-3xl mx-auto">
-              {/* Category Tabs */}
-              <div className="flex gap-1 mb-2 overflow-x-auto pb-1 scrollbar-hide">
-                {(Object.keys(SOVEREIGN_COMMANDS) as CommandCategory[]).map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap capitalize ${
-                      activeCategory === category 
-                        ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' 
-                        : 'text-white/30 hover:text-white/50 hover:bg-white/5'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
+          {/* System Directives (From Neural UI) */}
+          <div>
+            <h2 className="text-[10px] font-mono text-[#8A8F9B] uppercase tracking-widest mb-3 px-3">System Directives</h2>
+            <div className="space-y-1">
+              {['/check_system', '/list_files', '/clear_chat'].map(cmd => (
+                <button 
+                  key={cmd} 
+                  onClick={() => insertQuickCommand(cmd)}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs font-mono text-[#8A8F9B] hover:text-[#00E5FF] hover:bg-[#1A1D24] transition-colors flex items-center gap-2"
+                >
+                  <Icons.Command /> {cmd}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 mt-auto border-t border-[#1F222A]">
+          <div className="bg-[#12141A] border border-[#1F222A] rounded-xl p-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-[#1A1D24] text-[#00E5FF] flex items-center justify-center">
+              <Icons.Shield />
+            </div>
+            <div>
+              <div className="text-[10px] text-[#8A8F9B] uppercase font-bold tracking-wider">Governor</div>
+              <div className="text-xs text-[#00E5FF] font-medium tracking-wide">CONSTITUTIONAL</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ========================================== */}
+      {/* MAIN CENTER AREA                           */}
+      {/* ========================================== */}
+      <main className="flex-1 flex flex-col min-w-0 bg-[#0A0C10]">
+        
+        {/* Top Header Metrics (From Original Command Center) */}
+        <header className="h-16 border-b border-[#1F222A] flex items-center justify-between px-6 bg-[#0E1015] flex-shrink-0">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-[#8A8F9B] text-xs font-bold tracking-widest uppercase">
+              <Icons.Activity /> System Health
+            </div>
+            <div className="flex gap-6 text-sm">
+              <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-[#1A1D24] text-[#00E5FF] flex items-center justify-center"><Icons.Cpu /></div> <span className="font-mono text-white">18%</span></div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-[#1A1D24] text-[#B388FF] flex items-center justify-center"><Icons.HardDrive /></div> <span className="font-mono text-white">58%</span></div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-[#1A1D24] text-[#FF9800] flex items-center justify-center"><Icons.Zap /></div> <span className="font-mono text-white">16%</span></div>
+              <div className="flex items-center gap-2"><div className="w-5 h-5 rounded bg-[#1A1D24] text-[#00E676] flex items-center justify-center"><Icons.Terminal /></div> <span className="font-mono text-white text-xs">14.69 MB/s</span></div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-[#8A8F9B] uppercase font-bold tracking-wider">Uptime</span>
+              <span className="text-xs font-mono text-white" suppressHydrationWarning>4947s</span>
+            </div>
+            <button className="text-[#8A8F9B] hover:text-white transition-colors"><Icons.Settings /></button>
+          </div>
+        </header>
+
+        {/* Central Chat Interface */}
+        <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 overflow-hidden relative">
+          <div className="flex-1 bg-[#0E1015] border border-[#1F222A] rounded-xl flex flex-col overflow-hidden relative shadow-2xl">
+            
+            {/* Window Header */}
+            <div className="h-12 border-b border-[#1F222A] flex items-center justify-between px-4 bg-[#12141A] flex-shrink-0">
+              <div className="flex items-center gap-2 text-[#00E5FF] uppercase font-bold text-xs tracking-wider">
+                {activeWorkerInfo.icon} {activeWorkerInfo.name.toUpperCase()}
               </div>
-              
-              {/* Quick Commands */}
-              {showCommands && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {SOVEREIGN_COMMANDS[activeCategory].slice(0, 4).map((cmd, idx) => (
-                    <button
-                      key={`${activeCategory}-${idx}`}
-                      onClick={() => executeAction(cmd.cmd, cmd.payload)}
-                      disabled={loading}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 rounded-full text-xs flex items-center gap-2 transition-all border border-white/5 hover:border-white/10"
-                    >
-                      <span>{cmd.icon}</span>
-                      <span>{cmd.cmd}</span>
-                    </button>
-                  ))}
-                  <button 
-                    onClick={() => setShowCommands(false)} 
-                    className="px-2 py-1.5 text-white/20 hover:text-white/40 transition-colors"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
+              <div className="flex items-center gap-3">
+                <div className="px-3 py-1 rounded bg-[#1A1D24] border border-[#2A2E38] text-[10px] font-mono text-white/60 uppercase">
+                  Engine: <span className="text-[#B388FF]">{selectedModel}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase text-[#00E676]">
+                  <div className="w-2 h-2 rounded-full bg-[#00E676] animate-pulse shadow-[0_0_8px_#00E676]" /> Ready
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+              {chatLog.length === 0 ? (
+                /* Empty State (From Neural UI) */
+                <div className="h-full flex flex-col items-center justify-center text-[#4B5563] font-mono">
+                  <div className="w-16 h-16 rounded-xl bg-[#1A1D24] border border-[#2A2E38] text-[#00E5FF] flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,229,255,0.1)]">
+                    <Icons.Command />
+                  </div>
+                  <h3 className="text-white text-lg mb-2">SYSTEM INITIALIZED</h3>
+                  <div className="text-sm space-y-2 text-center text-[#8A8F9B]">
+                    <p>Sovereign OS v2.0 Cognitive Engine Online.</p>
+                    <p>All subsystems optimal. Waiting for user input via {activeWorkerInfo.name}.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6 max-w-4xl mx-auto pb-4">
+                  <AnimatePresence mode="popLayout">
+                    {chatLog.map((message) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex flex-col gap-1.5 ${message.role === 'user' ? 'items-end' : 'items-start'}`}
+                      >
+                        {/* Meta tag */}
+                        <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#8A8F9B] px-1">
+                          {message.role === 'user' ? (
+                            <><span suppressHydrationWarning>{message.timestamp}</span> <span className="text-[#4B5563]">•</span> <span className="text-white">Admin</span></>
+                          ) : (
+                            <><span className={message.role === 'system' ? 'text-[#FF9800]' : 'text-[#00E5FF]'}>{message.role === 'system' ? 'SYSTEM' : activeWorkerInfo.name}</span> <span className="text-[#4B5563]">•</span> <span suppressHydrationWarning>{message.timestamp}</span></>
+                          )}
+                        </div>
+
+                        {/* Message Content (Neural UI style: Border-left, no bubbles) */}
+                        <div className={`w-full max-w-[85%] relative ${
+                          message.role === 'user' 
+                            ? 'bg-[#12141A] border border-[#2A2E38] rounded-xl rounded-tr-sm p-4 text-white shadow-sm' 
+                            : message.role === 'system'
+                            ? 'border-l-2 border-[#FF9800] bg-gradient-to-r from-[#FF9800]/10 to-transparent p-4 text-[#FF9800] rounded-r-xl'
+                            : 'border-l-2 border-[#00E5FF] bg-gradient-to-r from-[#00E5FF]/10 to-transparent p-4 text-white rounded-r-xl shadow-[inset_20px_0_40px_-20px_rgba(0,229,255,0.05)]'
+                        }`}>
+                          {message.content ? (
+                            <MessageContent content={message.content} />
+                          ) : (
+                            <div className="flex items-center gap-3 text-[#00E5FF] font-mono text-xs">
+                              <LoadingIndicator /> Computing response...
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  <div ref={chatEndRef} />
                 </div>
               )}
-              
-              {/* Input Field */}
-              <div className="flex gap-2">
-                <button
-                  onClick={startListening}
-                  disabled={loading}
-                  className={`p-3 rounded-xl transition-all disabled:opacity-50 ${
-                    isListening 
-                      ? 'bg-red-500/20 text-red-400 animate-pulse border border-red-500/50' 
-                      : 'bg-white/5 text-white/40 hover:text-white/60 border border-white/5 hover:border-white/10'
-                  }`}
-                  title="Voice Input"
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-                
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && executeAction(input)}
-                  placeholder={isListening ? "Listening..." : `Message ${activeWorker} worker...`}
-                  disabled={loading}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-cyan-500/40 transition-all placeholder:text-white/20 disabled:opacity-50"
-                />
-                
-                <button
-                  onClick={() => executeAction(input)}
-                  disabled={loading || !input.trim()}
-                  className="px-6 py-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {loading ? '...' : 'Send'}
-                </button>
+            </div>
+
+            {/* Input Console (From Neural UI) */}
+            <div className="p-4 bg-[#0E1015] border-t border-[#1F222A] flex-shrink-0">
+              <div className="max-w-4xl mx-auto">
+                <div className="relative group rounded-xl bg-[#12141A] border border-[#2A2E38] focus-within:border-[#00E5FF]/50 focus-within:shadow-[0_0_20px_rgba(0,229,255,0.05)] transition-all flex flex-col p-1.5">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder={`Transmit command to ${activeWorkerInfo.name}...`}
+                    className="w-full bg-transparent border-none outline-none text-white placeholder:text-[#4B5563] text-sm px-3 py-2.5 resize-none max-h-32 min-h-[44px] custom-scrollbar font-mono"
+                    rows={1}
+                    disabled={isLoading}
+                  />
+                  
+                  <div className="flex items-center justify-between px-2 pt-1 border-t border-[#1F222A] mt-1">
+                    <div className="flex items-center gap-3 text-[10px] font-mono text-[#4B5563] uppercase tracking-widest">
+                      <span>Shift + Enter for newline</span>
+                    </div>
+                    
+                    <button
+                      onClick={sendMessage}
+                      disabled={isLoading || !input.trim()}
+                      className="px-5 py-1.5 rounded bg-[#1A1D24] text-[#00E5FF] text-[10px] font-bold font-mono tracking-widest uppercase transition-all disabled:opacity-30 hover:bg-[#00E5FF] hover:text-black border border-[#2A2E38] hover:border-[#00E5FF]"
+                    >
+                      {isLoading ? 'Executing...' : 'Transmit'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      {/* ========================================== */}
+      {/* RIGHT STATS PANELS (Original Command Center) */}
+      {/* ========================================== */}
+      <aside className="hidden xl:flex w-[320px] flex-col gap-6 p-6 pl-0 bg-[#0A0C10] overflow-y-auto custom-scrollbar flex-shrink-0">
+        
+        {/* Network Panel */}
+        <div className="bg-[#0E1015] border border-[#1F222A] rounded-xl p-5 shadow-lg">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-white">
+              <div className="text-[#00E676]"><Icons.Terminal /></div> Network
+            </div>
+            <span className="text-[10px] text-[#00E676] font-mono uppercase">38 Active</span>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-[10px] text-[#8A8F9B] mb-1.5 uppercase font-bold tracking-wider">
+                <span>Download</span> <span className="font-mono text-white">14.69 MB/s</span>
+              </div>
+              <div className="h-1 bg-[#1A1D24] rounded-full overflow-hidden">
+                <div className="h-full bg-[#00E676] w-[75%] shadow-[0_0_8px_#00E676]" />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-[10px] text-[#8A8F9B] mb-1.5 uppercase font-bold tracking-wider">
+                <span>Upload</span> <span className="font-mono text-white">0.38 MB/s</span>
+              </div>
+              <div className="h-1 bg-[#1A1D24] rounded-full overflow-hidden">
+                <div className="h-full bg-[#00E5FF] w-[15%] shadow-[0_0_8px_#00E5FF]" />
               </div>
             </div>
           </div>
-        </main>
+        </div>
 
-        {/* Right Panel */}
-        <aside className="w-64 border-l border-white/5 bg-black/20 backdrop-blur-sm p-4 hidden lg:block flex-shrink-0">
-          <TwoBarMeter 
-            sessionPercent={(quotas.session.used / quotas.session.total) * 100} 
-            weeklyPercent={(quotas.weekly.used / quotas.weekly.total) * 100} 
-            resetTime={Date.now() + 7200000} 
-          />
-          <div className="mt-4 text-xs text-white/20 text-center">
-            {quotas.session.used} / {quotas.session.total} sessions
-          </div>
-        </aside>
-      </div>
-
-      {/* Help Modal */}
-      {showHelp && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={(e) => e.target === e.currentTarget && setShowHelp(false)}
-        >
-          <div className="max-w-md w-full bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 relative">
-            <button 
-              onClick={() => setShowHelp(false)}
-              className="absolute top-4 right-4 p-1 hover:bg-white/5 rounded-lg text-white/40 hover:text-white/60"
-            >
-              <X size={18} />
-            </button>
-            
-            <h2 className="text-lg font-medium mb-4 text-white">Welcome to REZ HIVE 👋</h2>
-            
-            <div className="space-y-3 text-sm text-white/70">
-              <p className="flex items-start gap-2">
-                <span className="text-cyan-400 font-medium">•</span>
-                <span><span className="text-cyan-400">Streaming Chat</span> — Responses appear in real-time</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-cyan-400 font-medium">•</span>
-                <span><span className="text-cyan-400">Voice Input</span> — Click the microphone button</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-cyan-400 font-medium">•</span>
-                <span><span className="text-cyan-400">Persistent History</span> — Chat saved to localStorage</span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="text-cyan-400 font-medium">•</span>
-                <span><span className="text-cyan-400">Workers</span> — Switch between AI modes in sidebar</span>
-              </p>
+        {/* Memory Context Panel */}
+        <div className="flex-1 bg-[#0E1015] border border-[#1F222A] rounded-xl p-5 shadow-lg flex flex-col min-h-[200px]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-white">
+              <div className="text-[#B388FF]"><Icons.Database /></div> Memory Context
             </div>
-            
-            <button 
-              onClick={() => setShowHelp(false)} 
-              className="mt-6 w-full px-4 py-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400 hover:bg-cyan-500/20 transition-colors font-medium"
-            >
-              Got it
-            </button>
+            <button className="text-[10px] text-[#B388FF] font-mono uppercase hover:text-white transition-colors">View All</button>
+          </div>
+          <div className="flex-1 rounded-lg border border-[#1F222A] bg-[#0A0C10] p-4 flex flex-col items-center justify-center text-center gap-2">
+             <div className="text-[#2A2E38]"><Icons.Database /></div>
+             <span className="text-[#4B5563] text-xs font-mono">Context window empty.<br/> Awaiting data injection.</span>
           </div>
         </div>
-      )}
+
+        {/* GPU Engine Panel */}
+        <div className="h-48 bg-[#0E1015] border border-[#1F222A] rounded-xl p-5 shadow-lg flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-white">
+              <div className="text-[#FF9800]"><Icons.Zap /></div> GPU Engine
+            </div>
+            <span className="text-xs text-[#FF9800] font-mono">52°C</span>
+          </div>
+          <div className="flex-1 flex items-end justify-between gap-1 pt-4">
+            {[30,40,70,80,45,40,30,60,85,30,20,55,90,40,35,70,60,30,80,65,40,20].map((h, i) => (
+              <div key={i} className="w-full bg-[#FF9800] rounded-t-sm opacity-80" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Global PS1 Controller */}
+      <RezHiveController />
+
+      {/* Custom Scrollbar Global Styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #2A2E38; border-radius: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+      `}</style>
     </div>
   );
 }
