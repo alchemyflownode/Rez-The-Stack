@@ -27,6 +27,7 @@ from workers.brain_worker import BrainWorker
 from workers.eyes_worker import EyesWorker
 from workers.hands_worker import HandsWorker
 from workers.memory_worker import MemoryWorker
+from workers.system_worker import SystemWorker
 from ps1_integration import router as ps1_router
 from zero_drift_core import constitution, ZeroDriftConstitution
 from drift_detector import detector, ZeroDriftDetector
@@ -235,6 +236,7 @@ workers.register(BrainWorker())
 workers.register(EyesWorker())
 workers.register(HandsWorker())
 workers.register(MemoryWorker())
+workers.register(SystemWorker())
 
 # ============================================================================
 # CONSTITUTIONAL AI INITIALIZATION
@@ -291,6 +293,24 @@ async def generate_stream(task: str, worker_name: str = "brain", model: str = No
         # =========================================================
         task_lower = task.lower()
         
+        # =========================================================
+        # SYSTEM DIRECTIVES - HANDLE SLASH COMMANDS
+        # =========================================================
+        if task_lower.startswith('/'):
+            worker_name = "system"
+            logger.info(f"🔄 SYSTEM COMMAND → System Worker: {task[:50]}...")
+            # Let the system worker handle it
+        
+        # PC Search commands -> Memory Worker (files)
+        elif any(phrase in task_lower for phrase in [
+            'search pc', 'find on pc', 'search computer', 'find file', 
+            'locate file', 'list drives', 'disk space', 'show drives',
+            'search entire pc', 'find on computer', 'find all',
+            'search for file', 'drive list', 'storage'
+        ]):
+            worker_name = "files"
+            logger.info(f"🔄 Routed to Memory Worker: {task[:50]}...")
+        # Let the system worker handle it
         # PC Search commands -> Memory Worker (files)
         if any(phrase in task_lower for phrase in [
             'search pc', 'find on pc', 'search computer', 'find file', 
@@ -713,6 +733,7 @@ if __name__ == "__main__":
     print("=" * 60)
     
     uvicorn.run(app, host="0.0.0.0", port=port)
+
 
 
 
