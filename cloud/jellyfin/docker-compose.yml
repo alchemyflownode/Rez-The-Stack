@@ -1,0 +1,21 @@
+﻿version: '3.8'
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8096:8096"
+    volumes:
+      - ./config:/config
+      - ./cache:/cache
+    environment:
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - jellyfin-network
+
+networks:
+  jellyfin-network:
+    driver: bridge

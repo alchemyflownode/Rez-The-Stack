@@ -1,13 +1,12 @@
-﻿﻿import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./test.css";
-import "@/styles/dual-theme.css";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "REZ HIVE Sovereign",
-  description: "Builder Mode • Flow Mode • Sovereign AI",
+  title: "REZ HIVE",
+  description: "Sovereign AI Operating System",
 };
 
 export default function RootLayout({

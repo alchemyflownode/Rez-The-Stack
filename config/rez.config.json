@@ -1,0 +1,31 @@
+﻿{
+    "identity":  {
+                     "name":  "OKIRU",
+                     "version":  "2.2.0",
+                     "phase":  "Validation"
+                 },
+    "limits":  {
+                   "max_text_results":  10,
+                   "max_image_results":  5,
+                   "cpu_warning_threshold":  80
+               },
+    "permissions":  {
+                        "allow_process_kill":  false,
+                        "allow_file_overwrite":  true,
+                        "allow_external_requests":  true
+                    },
+    "search":  {
+                   "provider":  "duckduckgo",
+                   "max_results":  5,
+                   "safe_search":  "moderate"
+               },
+    "models":  {
+                   "future_mode":  false,
+                   "tasks":  {
+                                 "chat":  "llama3.2:3b",
+                                 "code":  "llama3.2:3b",
+                                 "vision":  "llava:7b"
+                             },
+                   "default":  "llama3.2:3b"
+               }
+}

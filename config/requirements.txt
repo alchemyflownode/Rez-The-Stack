@@ -1,0 +1,27 @@
+﻿# Core
+fastapi
+uvicorn
+python-multipart
+pydantic
+
+# AI
+ollama
+chromadb-client
+sentence-transformers
+torch
+transformers
+
+# RAG
+langchain
+langchain-chroma
+tiktoken
+pypdf
+python-docx
+markdown
+
+# MCP Servers
+psutil
+requests
+
+# Utils
+python-dotenv

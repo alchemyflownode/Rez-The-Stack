@@ -1,4 +1,4 @@
-// src/components/RezHiveController.tsx
+// src/components/RezHiveController.tsx - UPDATED with Vision + Voice + MCP
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -6,14 +6,15 @@ import {
   X, Play, RotateCw, Activity, Zap, Shield, Terminal, 
   RefreshCw, Trash2, BookOpen, Cpu, HardDrive, Network, 
   AlertTriangle, GitMerge, CheckCircle, Globe, Code,
-  Eye, Brain, Database, Command, Settings, Bell
+  Eye, Brain, Database, Command, Settings, Bell, Mic,
+  Video, Image, Boxes, Link, Wifi
 } from "lucide-react";
 
 interface OutputLine {
   id: string;
   text: string;
   timestamp: string;
-  type: "command" | "success" | "error" | "info" | "heal" | "warning" | "constitution" | "search" | "code";
+  type: "command" | "success" | "error" | "info" | "heal" | "warning" | "constitution" | "search" | "code" | "vision" | "voice" | "mcp";
 }
 
 interface ServiceStatus {
@@ -23,15 +24,18 @@ interface ServiceStatus {
   ollama: boolean;
   ledger: boolean;
   duckduckgo: boolean;
+  mcp: boolean;
 }
 
 interface WorkerStatus {
   orchestrator: boolean;
   brain: boolean;
-  search: boolean;  // CHANGE: 'eyes' → 'search'
-  code: boolean;     // CHANGE: 'hands' → 'code'
-  files: boolean;    // CHANGE: 'memory' → 'files'
+  search: boolean;
+  code: boolean;
+  files: boolean;
   system: boolean;
+  vision: boolean;
+  voice: boolean;
 }
 
 interface SystemMetrics {
@@ -47,7 +51,7 @@ const API_BASE = "http://localhost:8001";
 
 export function RezHiveController() {
   const [isOpen, setIsOpen] = useState(false);
-  const[output, setOutput] = useState<OutputLine[]>([]);
+  const [output, setOutput] = useState<OutputLine[]>([]);
   const [loading, setLoading] = useState<Record<number, boolean>>({});
   const [services, setServices] = useState<ServiceStatus>({
     kernel: false,
@@ -55,7 +59,8 @@ export function RezHiveController() {
     nextjs: true,
     ollama: false,
     ledger: false,
-    duckduckgo: false
+    duckduckgo: false,
+    mcp: false
   });
   const [workers, setWorkers] = useState<WorkerStatus>({
     orchestrator: false,
@@ -63,7 +68,9 @@ export function RezHiveController() {
     search: false,
     code: false,
     files: false,
-    system: false
+    system: false,
+    vision: false,
+    voice: false
   });
   const [metrics, setMetrics] = useState<SystemMetrics>({
     cpu: 0,
@@ -73,12 +80,13 @@ export function RezHiveController() {
     tokens: 0,
     maxTokens: 8192
   });
-  const[healingActive, setHealingActive] = useState(false);
+  const [healingActive, setHealingActive] = useState(false);
   const [autoHeal, setAutoHeal] = useState(false);
   const [healCount, setHealCount] = useState(0);
-  const[showLedger, setShowLedger] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
   const [precedents, setPrecedents] = useState<any[]>([]);
   const [searchMode, setSearchMode] = useState<"duckduckgo" | "brave" | "google">("duckduckgo");
+  const [isListening, setIsListening] = useState(false);
   
   const outputRef = useRef<HTMLDivElement>(null);
   const healthInterval = useRef<NodeJS.Timeout>();
@@ -92,7 +100,7 @@ export function RezHiveController() {
   };
 
   const addOutput = (text: string, type: OutputLine["type"] = "info") => {
-    setOutput((prev) =>[
+    setOutput((prev) => [
       ...prev,
       {
         id: Math.random().toString(36).substring(2, 9),
@@ -113,7 +121,7 @@ export function RezHiveController() {
       if (healthInterval.current) clearInterval(healthInterval.current);
       if (metricsInterval.current) clearInterval(metricsInterval.current);
     };
-  },[]);
+  }, []);
 
   const fetchWithTimeout = async (url: string, options?: RequestInit, timeoutMs = 5000) => {
     const controller = new AbortController();
@@ -129,11 +137,91 @@ export function RezHiveController() {
   };
 
   // =================================================================
+  // MCP COMMANDS
+  // =================================================================
+  const checkMCP = async (): Promise<boolean> => {
+    try {
+      // Check if MCP server is running on port 8002 (or your MCP port)
+      const response = await fetchWithTimeout('http://localhost:8002/health', {}, 2000)
+        .then(r => r.ok).catch(() => false);
+      setServices(prev => ({ ...prev, mcp: response }));
+      return response;
+    } catch {
+      setServices(prev => ({ ...prev, mcp: false }));
+      return false;
+    }
+  };
+
+  const mcpStatus = async (): Promise<string> => {
+    addOutput("🔌 Checking MCP server status...", "command");
+    try {
+      const response = await fetch('http://localhost:8002/tools', {
+        method: 'GET',
+        timeout: 3000
+      }).catch(() => null);
+      
+      if (response && response.ok) {
+        const data = await response.json();
+        const toolCount = data.tools?.length || 0;
+        setServices(prev => ({ ...prev, mcp: true }));
+        return `✅ MCP server running with ${toolCount} tools available`;
+      } else {
+        setServices(prev => ({ ...prev, mcp: false }));
+        return "❌ MCP server not responding (run mcp_server.py)";
+      }
+    } catch (e: any) {
+      setServices(prev => ({ ...prev, mcp: false }));
+      return `❌ MCP error: ${e.message}`;
+    }
+  };
+
+  const mcpDiscover = async (): Promise<string> => {
+    addOutput("🔍 Discovering MCP servers...", "command");
+    try {
+      // This would scan for available MCP servers
+      // For now, return a list of common ones
+      return "🔍 **Available MCP Servers:**\n\n" +
+             "• 📁 Filesystem (local files)\n" +
+             "• 🐙 GitHub (repos, issues, PRs)\n" +
+             "• 💬 Slack (messages, channels)\n" +
+             "• 📅 Google Calendar\n" +
+             "• 📧 Gmail\n" +
+             "• ☁️ AWS S3\n" +
+             "• 🗄️ PostgreSQL\n\n" +
+             "Install with: `pip install mcp-server-[name]`";
+    } catch (e: any) {
+      return `❌ Discovery failed: ${e.message}`;
+    }
+  };
+
+  const mcpTest = async (): Promise<string> => {
+    addOutput("🧪 Testing MCP connection...", "command");
+    try {
+      // Test a simple tool call
+      const response = await fetch('http://localhost:8002/call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tool: "search_pc",
+          arguments: { query: "budget", max_results: 5 }
+        })
+      }).catch(() => null);
+      
+      if (response && response.ok) {
+        return "✅ MCP connection successful: search_pc('budget') working";
+      } else {
+        return "⚠️ MCP connection failed - is the server running?";
+      }
+    } catch (e: any) {
+      return `❌ MCP test failed: ${e.message}`;
+    }
+  };
+
+  // =================================================================
   // SYSTEM METRICS
   // =================================================================
   const updateMetrics = async () => {
     try {
-      // Get system metrics from kernel
       const response = await fetch(`${API_BASE}/health`);
       if (response.ok) {
         const data = await response.json();
@@ -145,17 +233,13 @@ export function RezHiveController() {
         }));
       }
       
-      // Update token count from chat
       const chatResponse = await fetch(`${API_BASE}/chat/${localStorage.getItem('rez_session_id')}/history`);
       if (chatResponse.ok) {
         const data = await chatResponse.json();
-        // Rough token estimate (4 chars ≈ 1 token)
         const totalChars = data.messages.reduce((acc: number, msg: any) => acc + msg.content.length, 0);
         setMetrics(prev => ({ ...prev, tokens: Math.ceil(totalChars / 4) }));
       }
-    } catch (e) {
-      // Silent fail
-    }
+    } catch (e) {}
   };
 
   // =================================================================
@@ -178,16 +262,63 @@ export function RezHiveController() {
         const workerStatus: WorkerStatus = {
           orchestrator: data.workers.some((w: any) => w.name === 'orchestrator' || w.name === 'router'),
           brain: data.workers.some((w: any) => w.name === 'brain'),
-          search: data.workers.some((w: any) => w.name === 'search'),  // CHANGED
-          code: data.workers.some((w: any) => w.name === 'code'),      // CHANGED
-          files: data.workers.some((w: any) => w.name === 'files'),    // CHANGED
-          system: data.workers.some((w: any) => w.name === 'system')
+          search: data.workers.some((w: any) => w.name === 'search'),
+          code: data.workers.some((w: any) => w.name === 'code'),
+          files: data.workers.some((w: any) => w.name === 'files'),
+          system: data.workers.some((w: any) => w.name === 'system'),
+          vision: data.workers.some((w: any) => w.name === 'vision'),
+          voice: data.workers.some((w: any) => w.name === 'voice')
         };
         setWorkers(workerStatus);
         return workerStatus;
       }
     } catch {}
     return workers;
+  };
+
+  // =================================================================
+  // VISION COMMANDS
+  // =================================================================
+  const testVision = async (task: string = "describe screen"): Promise<string> => {
+    addOutput(`👁️ Testing Vision: "${task}"...`, "command");
+    try {
+      const response = await fetch(`${API_BASE}/kernel/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task, worker: "vision" })
+      });
+      if (response.ok) {
+        addOutput(`✅ Vision test initiated`, "success");
+        return "Check chat for screen analysis";
+      }
+      throw new Error(`HTTP ${response.status}`);
+    } catch (e: any) {
+      throw new Error(`Vision test failed: ${e.message}`);
+    }
+  };
+
+  // =================================================================
+  // VOICE COMMANDS
+  // =================================================================
+  const testVoice = async (duration: number = 3): Promise<string> => {
+    addOutput(`🎤 Testing Voice - listening for ${duration} seconds...`, "command");
+    setIsListening(true);
+    try {
+      const response = await fetch(`${API_BASE}/kernel/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: `listen ${duration}`, worker: "voice" })
+      });
+      if (response.ok) {
+        addOutput(`✅ Voice test initiated`, "success");
+        setIsListening(false);
+        return "Check chat for transcription";
+      }
+      throw new Error(`HTTP ${response.status}`);
+    } catch (e: any) {
+      setIsListening(false);
+      throw new Error(`Voice test failed: ${e.message}`);
+    }
   };
 
   // =================================================================
@@ -216,7 +347,7 @@ export function RezHiveController() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
       const data = await response.json();
-      setPrecedents(data.precedents ||[]);
+      setPrecedents(data.precedents || []);
       
       if (data.precedents?.length === 0) {
         addOutput("📭 No precedents stored - ledger is empty", "info");
@@ -329,10 +460,11 @@ export function RezHiveController() {
       
       const ledger = await checkLedger(true);
       const duckduckgo = await checkDuckDuckGo();
+      const mcp = await checkMCP();
       const workerStatus = await checkWorkers();
 
       const responseTime = Date.now() - startTime;
-      setServices({ kernel, chroma, nextjs, ollama, ledger, duckduckgo });
+      setServices({ kernel, chroma, nextjs, ollama, ledger, duckduckgo, mcp });
 
       if (!kernel) failureCount.current.kernel = (failureCount.current.kernel || 0) + 1;
       else failureCount.current.kernel = 0;
@@ -358,8 +490,8 @@ export function RezHiveController() {
         }
       }
       
-      const workerStatusText = `Orch: ${workerStatus.orchestrator ? "✅" : "❌"} | Brain: ${workerStatus.brain ? "✅" : "❌"} | Search: ${workerStatus.search ? "✅" : "❌"} | Code: ${workerStatus.code ? "✅" : "❌"} | Files: ${workerStatus.files ? "✅" : "❌"} | Sys: ${workerStatus.system ? "✅" : "❌"}`;
-      const statusMessage = `Kernel: ${kernel ? "✅" : "❌"} | Chroma: ${chroma ? "✅" : "❌"} | Next.js: ${nextjs ? "✅" : "❌"} | Ollama: ${ollama ? "✅" : "❌"} | DDG: ${duckduckgo ? "✅" : "❌"} (${responseTime}ms)`;
+      const workerStatusText = `ORCH: ${workerStatus.orchestrator ? "✅" : "❌"} | 🧠:${workerStatus.brain ? "✅" : "❌"} | 👁️:${workerStatus.search ? "✅" : "❌"} | ✋:${workerStatus.code ? "✅" : "❌"} | 📁:${workerStatus.files ? "✅" : "❌"} | ⚙️:${workerStatus.system ? "✅" : "❌"} | 👁️V:${workerStatus.vision ? "✅" : "❌"} | 🎤:${workerStatus.voice ? "✅" : "❌"}`;
+      const statusMessage = `Kernel: ${kernel ? "✅" : "❌"} | Chroma: ${chroma ? "✅" : "❌"} | Next.js: ${nextjs ? "✅" : "❌"} | Ollama: ${ollama ? "✅" : "❌"} | DDG: ${duckduckgo ? "✅" : "❌"} | MCP: ${mcp ? "✅" : "❌"} (${responseTime}ms)`;
       
       if (!silent) {
         addOutput(statusMessage, "success");
@@ -455,7 +587,7 @@ export function RezHiveController() {
   // =================================================================
   // COMMANDS
   // =================================================================
-  const commands =[
+  const commands = [
     // SYSTEM COMMANDS (1-10)
     { id: 1, name: "CHECK STATUS", description: "Check all service health", action: () => checkStatus(false), icon: Activity },
     { id: 2, name: autoHeal ? "AUTO-HEAL: ON" : "AUTO-HEAL: OFF", description: "Toggle automatic healing", action: async () => { setAutoHeal(!autoHeal); return `Auto-healing ${!autoHeal ? 'activated' : 'deactivated'}`; }, icon: Shield },
@@ -467,6 +599,18 @@ export function RezHiveController() {
     // SEARCH COMMANDS (11-15)
     { id: 11, name: "DDG SEARCH", description: "Test DuckDuckGo search", action: () => testSearch("latest AI news"), icon: Globe },
     { id: 12, name: "SET DDG", description: "Set search to DuckDuckGo", action: () => setSearchEngine("duckduckgo"), icon: Globe },
+    
+    // VISION COMMANDS (13-14)
+    { id: 13, name: "TEST VISION", description: "Describe screen", action: () => testVision("describe screen"), icon: Eye },
+    { id: 14, name: "VISION ANALYZE", description: "Analyze screen", action: () => testVision("analyze: What's on my screen?"), icon: Video },
+    
+    // VOICE COMMANDS (15)
+    { id: 15, name: isListening ? "LISTENING..." : "TEST VOICE", description: "Listen for 3 seconds", action: () => testVoice(3), icon: Mic },
+    
+    // MCP COMMANDS (33-35) - NEW
+    { id: 33, name: "MCP STATUS", description: "List MCP tools", action: mcpStatus, icon: Network },
+    { id: 34, name: "MCP DISCOVER", description: "Discover new MCP servers", action: mcpDiscover, icon: Globe },
+    { id: 35, name: "MCP TEST", description: "Test MCP connection", action: mcpTest, icon: CheckCircle },
     
     // WORKER TESTS (21-30)
     { id: 21, name: "TEST BRAIN", description: "Test Brain worker", action: () => testWorker("brain", "What is the capital of France?"), icon: Brain },
@@ -480,7 +624,7 @@ export function RezHiveController() {
     { id: 17, name: "KILL PORT 3001", description: "Free Next.js port", action: () => killPort(3001), icon: Terminal, danger: true },
     { id: 18, name: "KILL PORT 8000", description: "Free Chroma port", action: () => killPort(8000), icon: Terminal, danger: true },
     
-    // UTILITY COMMANDS (31-35)
+    // UTILITY COMMANDS (31-32, 36-40)
     { id: 31, name: "CLEAR OUTPUT", description: "Clear terminal", action: clearOutput, icon: Trash2 },
     { id: 32, name: "SYSTEM METRICS", description: "Show current metrics", action: async () => { return `CPU: ${metrics.cpu}% | RAM: ${metrics.memory}% | Tokens: ${metrics.tokens}/${metrics.maxTokens}`; }, icon: Cpu },
   ];
@@ -517,7 +661,7 @@ export function RezHiveController() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Terminal size={16} className="text-cyan-400" />
-                <span className="font-mono text-sm font-bold text-cyan-400">PS1 v2.0</span>
+                <span className="font-mono text-sm font-bold text-cyan-400">PS1 v4.0</span>
               </div>
               <div className="flex items-center gap-2">
                 {/* Service Status Dots */}
@@ -527,6 +671,7 @@ export function RezHiveController() {
                   <div className={`w-2 h-2 rounded-full ${services.ollama ? 'bg-green-500' : 'bg-red-500'}`} title="Ollama" />
                   <div className={`w-2 h-2 rounded-full ${services.duckduckgo ? 'bg-blue-500' : 'bg-gray-500'}`} title="DuckDuckGo" />
                   <div className={`w-2 h-2 rounded-full ${services.ledger ? 'bg-purple-500' : 'bg-gray-500'}`} title="Ledger" />
+                  <div className={`w-2 h-2 rounded-full ${services.mcp ? 'bg-emerald-500' : 'bg-gray-500'}`} title="MCP" />
                 </div>
                 <span className="text-xs text-white/40 ml-2">heals:{healCount}</span>
                 <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/10 rounded transition-colors text-white/60"><X size={16} /></button>
@@ -556,6 +701,8 @@ export function RezHiveController() {
             <span className={workers.code ? "text-yellow-400" : ""}>✋:{workers.code ? "✅" : "❌"}</span>
             <span className={workers.files ? "text-purple-400" : ""}>📁:{workers.files ? "✅" : "❌"}</span>
             <span className={workers.system ? "text-orange-400" : ""}>⚙️:{workers.system ? "✅" : "❌"}</span>
+            <span className={workers.vision ? "text-pink-400" : ""}>👁️V:{workers.vision ? "✅" : "❌"}</span>
+            <span className={workers.voice ? "text-teal-400" : ""}>🎤:{workers.voice ? "✅" : "❌"}</span>
           </div>
 
           {/* Commands Grid - Scrollable */}
@@ -594,7 +741,7 @@ export function RezHiveController() {
           {/* Output Terminal */}
           <div className="flex-1 bg-black/60 font-mono text-[9px] overflow-y-auto custom-scrollbar p-2 space-y-1 min-h-[150px]">
             {output.length === 0 ? (
-              <div className="text-white/20 italic">$ Sovereign controller ready. 6 workers active.</div>
+              <div className="text-white/20 italic">$ Sovereign controller ready. 8 workers + MCP active.</div>
             ) : (
               output.map((line) => (
                 <div key={line.id} className={`flex gap-1 ${
@@ -604,6 +751,9 @@ export function RezHiveController() {
                   line.type === "heal" ? "text-yellow-400" :
                   line.type === "constitution" ? "text-purple-400" :
                   line.type === "search" ? "text-blue-400" :
+                  line.type === "vision" ? "text-pink-400" :
+                  line.type === "voice" ? "text-teal-400" :
+                  line.type === "mcp" ? "text-emerald-400" :
                   "text-white/60"
                 }`}>
                   <span className="text-white/20 flex-shrink-0">[{line.timestamp}]</span>
@@ -623,7 +773,7 @@ export function RezHiveController() {
               <button onClick={clearOutput} className="px-1.5 py-0.5 bg-white/5 hover:bg-white/10 rounded text-white/60 border border-white/10">Clear</button>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-white/20">v2.0</span>
+              <span className="text-white/20">v4.0</span>
               <Bell size={8} className="text-white/20" />
             </div>
           </div>
